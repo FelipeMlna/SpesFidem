@@ -1680,117 +1680,62 @@ async function adminLogin(e) {
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
     }
+    if (errorMsg) errorMsg.style.display = 'none';
 
-    try {
-        // SECURE: Now checking credentials on the backend
-        try {
-            const result = await db.adminLogin(user, pass);
+    // ============================================================
+    // PORTABLE CREDENTIALS (work on any device, without server)
+    // To add/change users, update this object here AND in server.py
+    // ============================================================
+    const ADMIN_USERS = {
+        '14298116':   { pass: '14298116Je*', name: 'Jhon Espinosa' },
+        '1106227253': { pass: '7253pipe',    name: 'Felipe Molina' },
+        '1005703432': { pass: '3432sergio',  name: 'Sergio Suarez' },
+        '1104942399': { pass: '2399caleb',   name: 'Caleb Perez' }
+    };
 
-            if (result.success) {
-                sessionStorage.setItem('isAdmin', 'true');
-                sessionStorage.setItem('adminName', result.name || 'Administrador');
+    const userData = ADMIN_USERS[user];
 
-                // CSS automatically hides overlay when is-admin class is added
-                loadAdminData();
-                showToast(`Bienvenido, ${result.name || 'Administrador'}`, "success");
+    if (userData && userData.pass === pass) {
+        // ✅ AUTHENTICATION SUCCESS (Client-side — works anywhere)
+        sessionStorage.setItem('isAdmin', 'true');
+        sessionStorage.setItem('adminName', userData.name);
+        document.documentElement.classList.add('is-admin');
 
-                // FORCE REFRESH UI: If CSS fails, we hide overlay manually
-                const overlay = document.getElementById('loginOverlay');
-                if (overlay) overlay.style.setProperty('display', 'none', 'important');
+        // Hide login overlay
+        const overlay = document.getElementById('loginOverlay');
+        if (overlay) overlay.style.setProperty('display', 'none', 'important');
 
-                const sidebar = document.querySelector('.sidebar');
-                const main = document.querySelector('.main-content');
-                if (sidebar) {
-                    sidebar.style.display = 'block';
-                    sidebar.style.setProperty('display', 'block', 'important');
-                }
-                if (main) {
-                    main.style.display = 'block';
-                    main.style.setProperty('display', 'block', 'important');
-                }
+        // Show admin content
+        const sidebar = document.querySelector('.sidebar');
+        const main = document.querySelector('.main-content');
+        if (sidebar) sidebar.style.setProperty('display', 'block', 'important');
+        if (main)    main.style.setProperty('display', 'block', 'important');
 
-                document.documentElement.classList.add('is-admin');
-            } else {
-                if (errorMsg) {
-                    errorMsg.textContent = result.message || "Credenciales incorrectas.";
-                    errorMsg.style.display = 'block';
-                }
-            }
-        } catch (error) {
-            console.error("Login Connection Error:", error);
+        showToast(`Bienvenido, ${userData.name}`, "success");
+        loadAdminData();
 
-            // FALLBACK LOGIC: If port 80 (default) failed, try port 3000 automatically
-            if (!db._retried && !db.loginUrl.includes(':3000')) {
-                console.log("Fetcher: Initial attempt failed. Retrying with fallback port 3000...");
-                const h = window.location.hostname || 'localhost';
-                const manualBase = `http://${h}:3000`;
-                db.loginUrl = `${manualBase}/api/login`;
-                db.apiUrl = `${manualBase}/api/clients`;
-                db._retried = true;
+        // Optionally sync with server in the background (non-blocking)
+        db.adminLogin(user, pass).catch(() => {
+            console.info("Server sync skipped (offline mode). Data from LocalStorage will be used.");
+        });
 
-                // Retry the login call recursively once
-                return adminLogin(e);
-            }
-
-            const targetUrl = db.loginUrl || 'desconocida';
-            
-            // OFFLINE FALLBACK LOGIC
-            // If the server is unreachable, try local offline authentication
-            // Note: These should match the Python backend users
-            const offlineUsers = {
-                '14298116': {'pass': '14298116Je*', 'name': 'Jhon Espinosa (Offline)'},
-                '1106227253': {'pass': '7253pipe', 'name': 'Felipe (Offline)'},
-                '1005703432': {'pass': '3432sergio', 'name': 'Sergio (Offline)'},
-                '1104942399': {'pass': '2399caleb', 'name': 'Caleb (Offline)'}
-            };
-            
-            if (offlineUsers[user] && offlineUsers[user].pass === pass) {
-                console.warn("Server unreachable. Using OFFLINE mode authentication.");
-                sessionStorage.setItem('isAdmin', 'true');
-                sessionStorage.setItem('adminName', offlineUsers[user].name);
-                
-                showToast(`Modo Sin Conexión - Bienvenido, ${offlineUsers[user].name}`, "info");
-                
-                const overlay = document.getElementById('loginOverlay');
-                if (overlay) overlay.style.setProperty('display', 'none', 'important');
-                
-                const sidebar = document.querySelector('.sidebar');
-                const main = document.querySelector('.main-content');
-                if (sidebar) {
-                    sidebar.style.display = 'block';
-                    sidebar.style.setProperty('display', 'block', 'important');
-                }
-                if (main) {
-                    main.style.display = 'block';
-                    main.style.setProperty('display', 'block', 'important');
-                }
-                
-                document.documentElement.classList.add('is-admin');
-                loadAdminData();
-                
-                if (errorMsg) errorMsg.style.display = 'none';
-            } else {
-                if (errorMsg) {
-                    errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ERROR DE CONEXIÓN.<br><span style="font-size: 0.85rem; font-weight: 500; color: #f87171;">No se pudo contactar con el servidor en:<br>${targetUrl}<br>Sugerencia: Ejecute el servidor usando <code>./run_server.sh</code></span>`;
-                    errorMsg.style.display = 'block';
-                } else {
-                    showToast("Error de conexión. Verifique el servidor local.", "error");
-                }
-            }
-        }
-    } catch (err) {
-        console.error("Login script error:", err);
+    } else {
+        // ❌ AUTHENTICATION FAILED
         if (errorMsg) {
-            errorMsg.textContent = "Error técnico al conectar con el servidor.";
+            errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Documento o contraseña incorrectos.';
             errorMsg.style.display = 'block';
         }
-    } finally {
-        if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = 'INGRESAR AL SISTEMA';
-        }
+    }
+
+    if (loginBtn) {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'INGRESAR AL SISTEMA';
     }
 }
+
+
+
+
 
 async function downloadCSV() {
     try {
