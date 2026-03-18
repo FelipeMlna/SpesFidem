@@ -1,70 +1,85 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const twilio = require('twilio');
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // To parse JSON bodies
 
 const server = http.createServer(app);
-
 const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
+  cors: { origin: '*', methods: ['GET', 'POST'] }
 });
 
+// Track which sockets are in each room
+const rooms = {}; // roomId -> [socketId, ...]
+
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log(`[+] Conectado: ${socket.id}`);
 
-  // Unirse a una sala específica
-  socket.on('join-room', (roomId, cb) => {
+  socket.on('join-room', (roomId) => {
     socket.join(roomId);
-    console.log(`Socket ${socket.id} joined room ${roomId}`);
-    
-    // Notificar a otros en la sala
-    socket.to(roomId).emit('user-connected', socket.id);
-    if(cb) cb();
+    if (!rooms[roomId]) rooms[roomId] = [];
+    rooms[roomId].push(socket.id);
+
+    console.log(`[R] ${socket.id} -> sala "${roomId}" (${rooms[roomId].length} usuarios)`);
+
+    // Notify the NEW user who else is already in the room
+    const others = rooms[roomId].filter(id => id !== socket.id);
+    if (others.length > 0) {
+      // Tell the new user the IDs of existing peers
+      socket.emit('existing-peers', others);
+      // Tell existing peers a new user joined
+      others.forEach(peerId => {
+        io.to(peerId).emit('user-joined', socket.id);
+      });
+    }
   });
 
-  // ========== WebRTC Signaling ==========
-  socket.on('offer', (payload) => {
-    socket.to(payload.target).emit('offer', {
-      caller: socket.id,
-      sdp: payload.sdp
-    });
+  // ========== WebRTC Signaling (peer-to-peer by socket ID) ==========
+  socket.on('offer', ({ target, sdp }) => {
+    io.to(target).emit('offer', { caller: socket.id, sdp });
   });
 
-  socket.on('answer', (payload) => {
-    socket.to(payload.target).emit('answer', {
-      callee: socket.id,
-      sdp: payload.sdp
-    });
+  socket.on('answer', ({ target, sdp }) => {
+    io.to(target).emit('answer', { callee: socket.id, sdp });
   });
 
-  socket.on('ice-candidate', (payload) => {
-    socket.to(payload.target).emit('ice-candidate', {
-      sender: socket.id,
-      candidate: payload.candidate
-    });
+  socket.on('ice-candidate', ({ target, candidate }) => {
+    io.to(target).emit('ice-candidate', { sender: socket.id, candidate });
   });
 
-  // ========== Sincronización de Estado Colaborativo ==========
+  // ========== Collaborative State Sync ==========
   socket.on('update-state', (payload) => {
-    // payload: { roomId, key, value }
-    // Emitir a todos en la sala excepto al que envía
+    // Broadcast to everyone else in the room
     socket.to(payload.roomId).emit('state-updated', payload);
   });
 
+  // ========== Disconnect ==========
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-    // Socket.io maneja la salida de las salas automáticamente
-    // pero podemos notificar al resto de la sala si tuviéramos mapeado el socket a una sala.
-    // Dado que el socket ya no existe, usamos broadcasts si llevamos registro.
-    io.emit('user-disconnected', socket.id);
+    console.log(`[-] Desconectado: ${socket.id}`);
+    // Remove from all rooms
+    for (const roomId in rooms) {
+      rooms[roomId] = rooms[roomId].filter(id => id !== socket.id);
+      if (rooms[roomId].length === 0) {
+        delete rooms[roomId];
+        console.log(`[X] Sala "${roomId}" cerrada (sin usuarios)`);
+      } else {
+        // Notify remaining users
+        io.to(roomId).emit('user-left', socket.id);
+      }
+    }
   });
 });
 
+// ========== Notificaciones (Eliminadas) ==========
+// La lógica de notificación de WhatsApp fue migrada exitosamente al frontend (wa.me)
+// para eliminar dependencias de APIs pagas como Twilio según requerimiento.
+
 const PORT = 3001;
-server.listen(PORT, () => console.log(`Backend de Consultoría corriendo en puerto ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n✅ Backend Spesfidem corriendo en http://0.0.0.0:${PORT}\n`);
+});

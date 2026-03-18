@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Producción ERP & Despacho | Spesfidem</title>
+    <link rel="stylesheet" href="css/style.css?v=V2_NAV">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <script>
+        try {
+            document.documentElement.classList.add('is-admin');
+        } catch (e) { }
+    </script>
+    <style>
+        body {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            display: flex;
+            padding-top: 0 !important;
+            margin: 0;
+            min-height: 100vh;
+            /* Flex layout to manage sidebar and content */
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #0f172a;
+            height: 100vh;
+            color: white;
+            padding: 1.5rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .main-content {
+            margin-left: 200px;
+            padding: 1.5rem;
+            width: calc(100% - 200px);
+            box-sizing: border-box;
+            transition: margin-left 0.3s ease, width 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- UI Fixes for overlapping --- */
+        header {
+            flex-shrink: 0; /* Unfixed header, part of flex flow */
+            position: relative;
+        }
+
+        /* --- Kanban Styles --- */
+        .kanban-board {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            overflow-x: auto;
+            /* Takes remaining space naturally */
+            flex: 1;
+            padding-bottom: 2rem;
+            align-items: flex-start; /* Correct behavior without squashing columns */
+        }
+
+        .kanban-column {
+            background: #e2e8f0;
+            border-radius: 8px;
+            min-width: 320px;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            /* Fluid height */
+            height: calc(100vh - 280px);
+            min-height: 500px; 
+        }
+
+        .kanban-header {
+            padding: 1rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #cbd5e1;
+            flex-shrink: 0;
+        }
+        
+        .kanban-header.pending { background: #fef08a; color: #854d0e; border-radius: 8px 8px 0 0;}
+        .kanban-header.production { background: #bfdbfe; color: #1e40af; border-radius: 8px 8px 0 0;}
+        .kanban-header.dispatch { background: #bbf7d0; color: #166534; border-radius: 8px 8px 0 0;}
+
+        .kanban-cards {
+            padding: 1rem;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .kanban-card {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #cbd5e1;
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-body {
+            font-size: 0.85rem;
+            color: #475569;
+        }
+        
+        .card-alert {
+            background: #ffe4e6;
+            color: #be123c;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-complete {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+            width: 100%;
+            margin-top: 10px;
+            transition: transform 0.1s;
+        }
+        .btn-complete:hover { transform: scale(1.02); }
+
+        .btn-history-restore {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* --- KPIs --- */
+        .kpi-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .kpi-icon {
+            font-size: 2rem;
+            color: #94a3b8;
+        }
+        
+        .kpi-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        /* --- Recommendations --- */
+        .recommendations {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 4px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            color: #94a3b8;
+            text-align: center;
+            padding: 2rem 1rem;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.5);
+            border-radius: 6px;
+            border: 2px dashed #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .empty-state i { font-size: 2rem; color: #cbd5e1; }
+
+        /* History Table Container */
+        .history-board {
+            display: none; /* Hidden by default */
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            margin-top: 1.5rem;
+            flex: 1;
+        }
+
+        /* Modal specific */
+        .inv-tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px 4px 0 0;
+            margin-right: 2px;
+        }
+        .inv-tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .inv-panel {
+            display: none;
+            padding: 1rem;
+            border: 1px solid #cbd5e1;
+            border-top: 3px solid #3b82f6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .inv-panel.active {
+            display: block;
+        }
+        .inv-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .inv-row label {
+            font-size: 0.85rem;
+            color: #334155;
+            flex: 1;
+        }
+        .inv-row input {
+            width: 80px;
+            padding: 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            text-align: right;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .main-content { margin-left: 0; width: 100%; padding-top: 4rem; }
+            .kanban-board { flex-direction: column; overflow-y: auto; height: auto; }
+            .kanban-column { height: auto; max-width: 100%; min-height: 200px; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2 style="margin-bottom: 2rem; font-size: 1.2rem;">Spesfidem<span style="color:var(--accent)">.</span> ERP</h2>
+        <ul style="list-style: none; padding:0;">
+            <li style="margin-bottom: 1rem;"><a href="admin.html" style="color:white; text-decoration:none; font-size: 0.9rem;"><i class="fas fa-users" style="margin-right:0.5rem;"></i> Clientes</a></li>
+            <li style="margin-bottom: 1rem;"><a href="cortes.html" style="color:var(--accent); text-decoration:none; font-size: 0.9rem; font-weight: bold;"><i class="fas fa-table" style="margin-right:0.5rem;"></i> TABLA</a></li>
+            <li style="margin-bottom: 1rem;"><a href="touch_mirror_calc.html" style="color:var(--accent); text-decoration:none; font-size: 0.9rem; font-weight: bold;"><i class="fas fa-magic" style="margin-right:0.5rem;"></i> ESPEJO TOUCH</a></li>
+            <li style="margin-bottom: 1rem;"><a href="production.html" style="color:#3b82f6; text-decoration:none; font-size: 0.9rem; font-weight: bold; background: rgba(59, 130, 246, 0.1); padding: 5px 10px; border-radius: 5px;"><i class="fas fa-network-wired" style="margin-right:0.5rem;"></i> ERP - PRODUCCIÓN</a></li>
+            <li style="margin-bottom: 1rem;"><a href="index.html" style="color:white; text-decoration:none; font-size: 0.9rem;"><i class="fas fa-home" style="margin-right:0.5rem;"></i> Volver al Sitio</a></li>
+        </ul>
+        
+        <!-- Inventory Config -->
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #334155;">
+            <h3 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;"><i class="fas fa-boxes"></i> GESTIÓN INVENTARIO</h3>
+            <div style="font-size: 0.8rem; color: #cbd5e1; display:flex; flex-direction:column; gap:0.5rem;">
+                <p style="margin:0; font-size: 0.75rem; color:#64748b;">Administre stock de vidrios y perfiles en detalle.</p>
+                <button onclick="openInventoryModal()" style="background:#3b82f6; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:5px;"><i class="fas fa-edit"></i> Control de Stock (Específico)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header style="margin-bottom: 1rem; background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <h1 style="font-size: 1.5rem; color: #0f172a; margin: 0;"><i class="fas fa-industry" style="color:#3b82f6;"></i> Planta de Producción y ERP</h1>
+                
+                <div style="display: flex; gap: 0.5rem;">
+                    <!-- Toggle views button -->
+                    <button id="btnToggleView" onclick="toggleViewMode()" class="btn-primary" style="background:#64748b; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fas fa-archive"></i> Ver Historial de Entregas</button>
+                    <!-- Refresh manual -->
+                    <button onclick="loadProductionData()" class="btn-primary" style="background:#0f172a; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fas fa-sync-alt"></i> Recalcular Flujo</button>
+                </div>
+            </div>
+            
+            <!-- Dashboard KPIs -->
+            <div id="kpiDashboard" class="kpi-container">
+                <div class="kpi-card" style="border-left: 4px solid #f59e0b;">
+                    <i class="fas fa-exclamation-triangle kpi-icon" style="color:#f59e0b;"></i>
+                    <div>
+                        <div style="color:#64748b; font-size:0.8rem; font-weight:bold;">Interrumpidos (Falta Material)</div>
+                        <div class="kpi-value" id="kpiDelayed">0</div>
+                    </div>
+                </div>
+                <div class="kpi-card" style="border-left: 4px solid #3b82f6;">
+                    <i class="fas fa-hammer kpi-icon" style="color:#3b82f6;"></i>
+                    <div>
+                        <div style="color:#64748b; font-size:0.8rem; font-weight:bold;">En Producción Activa</div>
+                        <div class="kpi-value" id="kpiProduction">0</div>
+                    </div>
+                </div>
+                <div class="kpi-card" style="border-left: 4px solid #10b981;">
+                    <i class="fas fa-box-open kpi-icon" style="color:#10b981;"></i>
+                    <div>
+                        <div style="color:#64748b; font-size:0.8rem; font-weight:bold;">Cola de Despacho</div>
+                        <div class="kpi-value" id="kpiDispatch">0</div>
+                    </div>
+                </div>
+                <div class="kpi-card" style="background: #0f172a; color:white;">
+                    <i class="fas fa-stopwatch kpi-icon" style="color:#94a3b8;"></i>
+                    <div>
+                        <div style="color:#94a3b8; font-size:0.8rem; font-weight:bold;">Horas de Carga Operativa</div>
+                        <div class="kpi-value" id="kpiHours" style="color:white;">0 hrs</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recommendations" id="recommendationBox" style="display:none;">
+                <strong style="color: #b45309;"><i class="fas fa-lightbulb"></i> Asistente ERP - Materiales Faltantes:</strong>
+                <p id="recommendationText" style="color: #92400e; margin: 0.5rem 0 0 0; font-size: 0.9rem; line-height: 1.4;"></p>
+            </div>
+        </header>
+
+        <!-- KANBAN BOARD VIEW -->
+        <div class="kanban-board" id="kanbanBoard">
+            
+            <div class="kanban-column">
+                <div class="kanban-header pending">
+                    <span><i class="fas fa-exclamation-triangle"></i> Retrasados / Espera Material</span>
+                    <span id="countPending" style="background:rgba(0,0,0,0.1); padding:2px 8px; border-radius:10px;">0</span>
+                </div>
+                <div class="kanban-cards" id="colPending"></div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="kanban-header production">
+                    <span><i class="fas fa-hammer"></i> En Producción Activa (FIFO)</span>
+                    <span id="countProduction" style="background:rgba(0,0,0,0.1); padding:2px 8px; border-radius:10px;">0</span>
+                </div>
+                <div class="kanban-cards" id="colProduction"></div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="kanban-header dispatch">
+                    <span><i class="fas fa-truck"></i> Listos para Montaje / Entrega</span>
+                    <span id="countDispatch" style="background:rgba(0,0,0,0.1); padding:2px 8px; border-radius:10px;">0</span>
+                </div>
+                <div class="kanban-cards" id="colDispatch"></div>
+            </div>
+
+        </div>
+
+        <!-- HISTORY / DELIVERED TABLE VIEW -->
+        <div class="history-board" id="historyBoard">
+            <div style="padding: 1.5rem; border-bottom: 2px solid #e2e8f0; background: #f8fafc; font-weight: bold; font-size: 1.2rem; color: #0f172a;">
+                <i class="fas fa-archive"></i> Historial Inborrable: Entregados y Cancelados
+            </div>
+            <table style="width: 100%; border-collapse: collapse; min-width: 1000px;" id="historyTable">
+                <thead style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0;">
+                    <tr>
+                        <th style="padding: 1rem; text-align: left; color: #64748b;">N° COT</th>
+                        <th style="padding: 1rem; text-align: left; color: #64748b;">Cliente</th>
+                        <th style="padding: 1rem; text-align: left; color: #64748b;">Detalle (Color / Vidrio)</th>
+                        <th style="padding: 1rem; text-align: left; color: #64748b;">Estado Histórico</th>
+                        <th style="padding: 1rem; text-align: left; color: #64748b; text-align:right;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Detailed Inventory Modal -->
+    <div id="invModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); z-index:9000; justify-content:center; align-items:center;">
+        <div style="background:white; border-radius:8px; width:100%; max-width:700px; position:relative; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid #cbd5e1; background: #f8fafc; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h2 style="margin:0;"><i class="fas fa-boxes" style="color:#3b82f6;"></i> Control de Stock Industrial</h2>
+                    <p style="margin:5px 0 0 0; font-size:0.8rem; color:#64748b;">Administra tiras de aluminio (equiv a 6m) y M² de vidriería.</p>
+                </div>
+                <button onclick="document.getElementById('invModal').style.display='none'" style="border:none; background:transparent; font-size:1.5rem; cursor:pointer;" title="Cerrar">&times;</button>
+            </div>
+            
+            <div style="padding: 1rem 1.5rem 0;">
+                <div style="display:flex;">
+                    <button class="inv-tab" onclick="switchInvTab('vidrios', this)">Inventario Vidrios / Espejos (m²)</button>
+                    <button class="inv-tab active" onclick="switchInvTab('aluminio', this)">Aluminio Perfilería (por Tiras/Metros)</button>
+                </div>
+            </div>
+
+            <!-- Panel Vidrios -->
+            <div class="inv-panel" id="panel-vidrios">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Panel Aluminio -->
+            <div class="inv-panel active" id="panel-aluminio">
+                <style>
+                    .alum-item-row { display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; padding: 0.8rem; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 4px; margin-bottom: 0.5rem; }
+                    .alum-item-row .form-control { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; }
+                    .alum-ref-input { font-weight: bold; width: 140px; }
+                    .alum-col-input { width: 120px; }
+                    .tiras-calc { display: flex; align-items: center; gap: 2px; }
+                    .alum-tiras-input { width: 60px; font-weight: bold; background: #e0f2fe; }
+                    .alum-m-input { width: 60px; }
+                    .btn-remove { background: #ef4444; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+                    .btn-add { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-top: 1rem; }
+                    .alum-total-display { width: 70px; text-align: right; color: #334155; font-size: 0.9rem; }
+                </style>
+                <div id="alum-body">
+                    <!-- Injected via JS -->
+                </div>
+                <button class="btn-add" onclick="addNewProfileRow()"><i class="fas fa-plus-circle"></i> Agregar Existencia</button>
+            </div>
+
+            <div style="padding: 1.5rem; border-top: 1px solid #cbd5e1; background: #f8fafc; display:flex; justify-content:flex-end; gap:1rem;">
+                <button onclick="document.getElementById('invModal').style.display='none'" style="padding:0.5rem 1rem; border:1px solid #cbd5e1; background:white; cursor:pointer; border-radius:4px; font-weight:bold;">Cancelar</button>
+                <button onclick="saveInventory()" style="padding:0.5rem 1.5rem; border:none; background:#10b981; color:white; cursor:pointer; border-radius:4px; font-weight:bold;"><i class="fas fa-save"></i> Guardar Inventario Físico</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js?v=V8_PROD"></script>
+    <script src="js/production.js?v=V2"></script>
+</body>
+
+</html>

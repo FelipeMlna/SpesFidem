@@ -1,109 +1,168 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function useWebRTC(socket, roomId, isInitiator) {
-  const [localStream, setLocalStream] = useState(null);
+const ICE_SERVERS = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+  ]
+};
+
+export default function useWebRTC(socket, roomId) {
+  const [localStream, setLocalStream]   = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [cameraActive, setCameraActive] = useState(true);
-  const [micActive, setMicActive] = useState(true);
-  const peerConnection = useRef(null);
+  const [micActive, setMicActive]       = useState(true);
 
-  const ICE_SERVERS = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ]
+  // peerConnections keyed by remote socket ID
+  const pcs = useRef({});
+  const localStreamRef = useRef(null);
+
+  // ── Helper: create a peer connection to a specific remote socket ──
+  const createPC = (remoteId) => {
+    if (pcs.current[remoteId]) return pcs.current[remoteId];
+
+    const pc = new RTCPeerConnection(ICE_SERVERS);
+    pcs.current[remoteId] = pc;
+
+    // Add local tracks
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current));
+    }
+
+    pc.ontrack = (event) => {
+      setRemoteStream(event.streams[0]);
+    };
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate && socket) {
+        socket.emit('ice-candidate', { target: remoteId, candidate: event.candidate });
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      if (['disconnected','failed','closed'].includes(pc.connectionState)) {
+        setRemoteStream(null);
+        pc.close();
+        delete pcs.current[remoteId];
+      }
+    };
+
+    return pc;
   };
 
+  // ── Main effect: get media + register socket events ──
   useEffect(() => {
     if (!socket || !roomId) return;
 
-    const startCall = async () => {
+    let isMounted = true;
+
+    const init = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (!isMounted) { stream.getTracks().forEach(t => t.stop()); return; }
+        localStreamRef.current = stream;
         setLocalStream(stream);
-
-        peerConnection.current = new RTCPeerConnection(ICE_SERVERS);
-
-        stream.getTracks().forEach(track => {
-          peerConnection.current.addTrack(track, stream);
-        });
-
-        peerConnection.current.ontrack = (event) => {
-          setRemoteStream(event.streams[0]);
-        };
-
-        peerConnection.current.onicecandidate = (event) => {
-          if (event.candidate) {
-            socket.emit('ice-candidate', { target: roomId, candidate: event.candidate });
-          }
-        };
-
-        // If initiator (advisor), create the offer
-        if (isInitiator) {
-          const offer = await peerConnection.current.createOffer();
-          await peerConnection.current.setLocalDescription(offer);
-          socket.emit('offer', { target: roomId, sdp: offer });
-        }
       } catch (err) {
-        console.error('Error accessing media devices:', err);
+        console.warn('Cámara/micrófono no disponible:', err.message);
       }
     };
 
-    startCall();
+    init();
 
-    socket.on('offer', async (payload) => {
-      if (!peerConnection.current) return;
-      await peerConnection.current.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-      const answer = await peerConnection.current.createAnswer();
-      await peerConnection.current.setLocalDescription(answer);
-      socket.emit('answer', { target: roomId, sdp: answer });
-    });
-
-    socket.on('answer', async (payload) => {
-      if (!peerConnection.current) return;
-      await peerConnection.current.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-    });
-
-    socket.on('ice-candidate', async (payload) => {
-      if (!peerConnection.current) return;
-      try {
-        await peerConnection.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
-      } catch (e) {
-        console.error('Error adding received ice candidate', e);
+    // ── Someone who was already in the room tells us they exist ──
+    const onExistingPeers = async (peerIds) => {
+      for (const peerId of peerIds) {
+        const pc = createPC(peerId);
+        try {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socket.emit('offer', { target: peerId, sdp: offer });
+        } catch (e) { console.error('offer error', e); }
       }
-    });
+    };
+
+    // ── A new user just joined our room ──
+    const onUserJoined = async (newPeerId) => {
+      // We'll wait for their offer; they will send it via existing-peers
+      createPC(newPeerId);
+    };
+
+    // ── Receive offer → send answer ──
+    const onOffer = async ({ caller, sdp }) => {
+      const pc = createPC(caller);
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit('answer', { target: caller, sdp: answer });
+      } catch (e) { console.error('answer error', e); }
+    };
+
+    // ── Receive answer ──
+    const onAnswer = async ({ callee, sdp }) => {
+      const pc = pcs.current[callee];
+      if (pc) {
+        try { await pc.setRemoteDescription(new RTCSessionDescription(sdp)); }
+        catch (e) { console.error('set answer error', e); }
+      }
+    };
+
+    // ── Receive ICE candidate ──
+    const onIce = async ({ sender, candidate }) => {
+      const pc = pcs.current[sender];
+      if (pc) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); }
+        catch (e) { /* ignore benign errors */ }
+      }
+    };
+
+    // ── Peer left ──
+    const onUserLeft = (peerId) => {
+      if (pcs.current[peerId]) {
+        pcs.current[peerId].close();
+        delete pcs.current[peerId];
+      }
+      setRemoteStream(null);
+    };
+
+    socket.on('existing-peers', onExistingPeers);
+    socket.on('user-joined',    onUserJoined);
+    socket.on('offer',          onOffer);
+    socket.on('answer',         onAnswer);
+    socket.on('ice-candidate',  onIce);
+    socket.on('user-left',      onUserLeft);
 
     return () => {
-      socket.off('offer');
-      socket.off('answer');
-      socket.off('ice-candidate');
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-      if (peerConnection.current) {
-        peerConnection.current.close();
+      isMounted = false;
+      socket.off('existing-peers', onExistingPeers);
+      socket.off('user-joined',    onUserJoined);
+      socket.off('offer',          onOffer);
+      socket.off('answer',         onAnswer);
+      socket.off('ice-candidate',  onIce);
+      socket.off('user-left',      onUserLeft);
+
+      // Close all peer connections
+      Object.values(pcs.current).forEach(pc => pc.close());
+      pcs.current = {};
+
+      // Stop local media
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+        localStreamRef.current = null;
       }
     };
-  }, [socket, roomId, isInitiator]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, roomId]);
 
   const toggleCamera = () => {
-    if (localStream) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setCameraActive(videoTrack.enabled);
-      }
-    }
+    const track = localStreamRef.current?.getVideoTracks()[0];
+    if (track) { track.enabled = !track.enabled; setCameraActive(track.enabled); }
   };
 
   const toggleMic = () => {
-    if (localStream) {
-      const audioTrack = localStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setMicActive(audioTrack.enabled);
-      }
-    }
+    const track = localStreamRef.current?.getAudioTracks()[0];
+    if (track) { track.enabled = !track.enabled; setMicActive(track.enabled); }
   };
 
   return { localStream, remoteStream, toggleCamera, toggleMic, cameraActive, micActive };
