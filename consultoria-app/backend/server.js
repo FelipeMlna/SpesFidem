@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
 // La lógica de notificación de WhatsApp fue migrada exitosamente al frontend (wa.me)
 // para eliminar dependencias de APIs pagas como Twilio según requerimiento.
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅ Backend Spesfidem corriendo en http://0.0.0.0:${PORT}\n`);
+  console.log(`\n✅ Backend Spesfidem corriendo en puerto: ${PORT}\n`);
 });
