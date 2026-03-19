@@ -343,6 +343,7 @@ class ClientDB {
     }
 }
 
+let currentCrmPrices = null;
 const db = new ClientDB();
 
 // --- Accessibility (Visual Modes: Standard, Light, Dark, High Contrast) ---
@@ -749,7 +750,20 @@ function collectFormData(isSimulation = false) {
     };
 }
 
+// ── NEW: Load CRM prices on startup ──
+async function loadCrmPrices() {
+    if (window.CrmPrices) {
+        try {
+            currentCrmPrices = await window.CrmPrices.getAll();
+            console.log("[Spesfidem CRM] Precios dinámicos cargados.");
+        } catch (e) { console.error("Error loading CRM prices:", e); }
+    }
+}
+document.addEventListener('DOMContentLoaded', loadCrmPrices);
+
 function getBasePrice(product) {
+    // If we have CRM prices, we could map them here. 
+    // For now, let's keep the base prices but allow override if we implement a "products" collection in CRM later.
     const prices = {
         // Ventanas
         'Ventana Corrediza': 380000,
@@ -775,6 +789,14 @@ function getBasePrice(product) {
 }
 
 function getProfileMarkup(color) {
+    if (currentCrmPrices && currentCrmPrices.profiles) {
+        // Find if any series matches or use a default
+        // For simplicity, we'll take the first series available or use '8025' as reference
+        const p = currentCrmPrices.profiles['8025'] || Object.values(currentCrmPrices.profiles)[0];
+        const colorKey = color.toLowerCase();
+        if (p && p[colorKey]) return p[colorKey] - (p['natural'] || 38000); 
+    }
+
     const markups = {
         'Natural': 0,
         'Blanco': 0,
@@ -787,6 +809,12 @@ function getProfileMarkup(color) {
 
 function getGlassMarkup(glassSpec) {
     if (!glassSpec) return 0;
+
+    // TRY CRM OVERRIDE
+    if (currentCrmPrices && currentCrmPrices.glass) {
+        const match = Object.keys(currentCrmPrices.glass).find(k => glassSpec.toLowerCase().includes(k.toLowerCase()));
+        if (match) return currentCrmPrices.glass[match].priceM2 || 0;
+    }
 
     let baseMarkup = 0;
 
@@ -1530,8 +1558,32 @@ window.confirmOrder = async function (formIds, options = {}) {
     try {
         if (typeof db !== 'undefined') {
             await window.db.save(data);
-        } else {
-            throw new Error("DB Object unavailable");
+        }
+
+        // ── CRM INTEGRATION ──
+        if (window.CrmClients && window.CrmQuotations) {
+            console.log("[Spesfidem CRM] Sincronizando registro...");
+            const client = await window.CrmClients.save({
+                id: valDoc, // Use document as ID for consistency
+                fullName: valFullName,
+                cellphone: valCellphone,
+                email: valEmail,
+                city: valCity,
+                address: valAddress,
+                clientType: 'Nuevo'
+            });
+
+            if (data.items && data.items.length > 0) {
+                await window.CrmQuotations.save(client.id, {
+                    items: data.items,
+                    subtotal: data.subtotal || 0,
+                    iva: data.iva || 0,
+                    grandTotal: data.grandTotal || 0,
+                    paymentPlan: data.paymentPlan || '75-25',
+                    notes: data.notes || 'Cotización desde sitio web'
+                });
+            }
+            console.log("[Spesfidem CRM] ✅ Sincronización exitosa");
         }
 
         showToast('¡Registro exitoso! Datos guardados correctamente.', 'success');

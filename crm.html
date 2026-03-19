@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM | Spesfidem Aluminio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#020617;--surface:rgba(15,23,42,0.95);--border:rgba(255,255,255,0.09);--accent:#38bdf8;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--text:#f1f5f9;--muted:#64748b;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;}
+
+    /* SIDEBAR */
+    .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;padding:1.5rem 1rem;}
+    .logo{display:flex;align-items:center;gap:10px;font-family:'Outfit',sans-serif;font-weight:800;font-size:1rem;color:white;margin-bottom:2rem;padding:.5rem;}
+    .logo i{color:var(--accent);}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:.7rem 1rem;border-radius:10px;color:var(--muted);font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;text-decoration:none;}
+    .nav-item:hover{background:rgba(255,255,255,.06);color:white;}
+    .nav-item.active{background:rgba(56,189,248,.12);color:var(--accent);}
+    .nav-item i{width:18px;text-align:center;}
+    .nav-section{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:#334155;padding:.5rem 1rem;margin-top:1rem;}
+    .sidebar-footer{margin-top:auto;}
+    .user-chip{display:flex;align-items:center;gap:8px;padding:.7rem;background:rgba(255,255,255,.05);border-radius:10px;font-size:.8rem;}
+    .avatar{width:32px;height:32px;border-radius:50%;background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.4);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--accent);font-weight:700;flex-shrink:0;}
+    .user-info .name{color:white;font-weight:600;font-size:.82rem;}
+    .user-info .role{color:var(--muted);font-size:.7rem;text-transform:capitalize;}
+
+    /* MAIN */
+    .main{margin-left:220px;flex:1;padding:1.5rem;min-height:100vh;}
+    .page{display:none;}
+    .page.active{display:block;}
+
+    /* TOP BAR */
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;}
+    .topbar h1{font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;}
+    .topbar .sub{color:var(--muted);font-size:.85rem;margin-top:.2rem;}
+
+    /* METRICS */
+    .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;}
+    .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:1.2rem;padding:1.4rem 1.6rem;position:relative;overflow:hidden;}
+    .metric-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.08;}
+    .metric-card.accent::before{background:var(--accent);}
+    .metric-card.success::before{background:var(--success);}
+    .metric-card.warning::before{background:var(--warning);}
+    .metric-card.danger::before{background:var(--danger);}
+    .metric-icon{font-size:1.4rem;margin-bottom:.8rem;}
+    .metric-card.accent .metric-icon{color:var(--accent);}
+    .metric-card.success .metric-icon{color:var(--success);}
+    .metric-card.warning .metric-icon{color:var(--warning);}
+    .metric-card.danger .metric-icon{color:var(--danger);}
+    .metric-value{font-family:'Outfit',sans-serif;font-size:1.9rem;font-weight:800;color:white;line-height:1;}
+    .metric-label{color:var(--muted);font-size:.78rem;margin-top:.3rem;}
+
+    /* CARDS / PANELS */
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:1.2rem;overflow:hidden;}
+    .panel-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;}
+    .panel-title{font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;display:flex;align-items:center;gap:8px;}
+    .panel-title i{color:var(--accent);}
+    .panel-body{padding:1.5rem;}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:.55rem 1.1rem;border-radius:8px;font-weight:600;font-size:.83rem;cursor:pointer;border:none;transition:all .25s;}
+    .btn-primary{background:var(--accent);color:#0f172a;}
+    .btn-primary:hover{background:#7dd3fc;}
+    .btn-success{background:#059669;color:white;}
+    .btn-success:hover{background:var(--success);}
+    .btn-danger{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3);}
+    .btn-danger:hover{background:rgba(239,68,68,.25);}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border);}
+    .btn-ghost:hover{background:rgba(255,255,255,.12);}
+    .btn-sm{padding:.35rem .7rem;font-size:.75rem;}
+
+    /* SEARCH */
+    .search-bar{position:relative;flex:1;max-width:340px;}
+    .search-bar i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;}
+    .search-bar input{width:100%;padding:.6rem .6rem .6rem 34px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:white;font-size:.85rem;outline:none;transition:all .3s;}
+    .search-bar input:focus{border-color:var(--accent);}
+    .search-bar input::placeholder{color:var(--muted);}
+
+    /* TABLE */
+    .table-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;font-size:.84rem;}
+    th{padding:.8rem 1rem;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);}
+    td{padding:.85rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+    tr:hover td{background:rgba(255,255,255,.02);}
+    tr:last-child td{border-bottom:none;}
+
+    /* BADGES */
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:.25rem .65rem;border-radius:50px;font-size:.7rem;font-weight:700;}
+    .badge-pending{background:rgba(245,158,11,.15);color:var(--warning);}
+    .badge-approved{background:rgba(16,185,129,.15);color:var(--success);}
+    .badge-making{background:rgba(56,189,248,.15);color:var(--accent);}
+    .badge-delivered{background:rgba(100,116,139,.15);color:#94a3b8;}
+    .badge-canceled{background:rgba(239,68,68,.15);color:var(--danger);}
+    .badge-admin{background:rgba(139,92,246,.15);color:#a78bfa;}
+    .badge-vendedor{background:rgba(56,189,248,.1);color:var(--accent);}
+
+    /* CLIENT TYPE */
+    .type-chip{display:inline-block;padding:.2rem .6rem;border-radius:50px;font-size:.68rem;font-weight:700;}
+    .type-frecuente{background:rgba(245,158,11,.15);color:#fbbf24;}
+    .type-nuevo{background:rgba(16,185,129,.15);color:#34d399;}
+    .type-vip{background:rgba(139,92,246,.2);color:#c4b5fd;}
+    .type-empresa{background:rgba(56,189,248,.15);color:#7dd3fc;}
+
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.88);backdrop-filter:blur(8px);z-index:9000;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+    .modal-overlay.open{display:flex;}
+    .modal-box{background:rgba(15,23,42,.98);border:1px solid var(--border);border-radius:1.5rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;}
+    .modal-header{padding:1.5rem 1.8rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-header h2{font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:700;}
+    .modal-body{padding:1.8rem;}
+    .modal-footer{padding:1.2rem 1.8rem;border-top:1px solid var(--border);display:flex;gap:.8rem;justify-content:flex-end;}
+    .close-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;padding:.3rem;transition:color .2s;}
+    .close-btn:hover{color:white;}
+
+    /* FORM */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .form-group{display:flex;flex-direction:column;gap:.4rem;}
+    .form-group.full{grid-column:1/-1;}
+    label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+    .form-control{padding:.7rem .9rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:white;font-size:.9rem;outline:none;transition:all .3s;width:100%;}
+    .form-control:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(56,189,248,.2);}
+    .form-control option{background:#0f172a;}
+    select.form-control{cursor:pointer;}
+
+    /* TABS */
+    .tabs{display:flex;gap:.3rem;background:rgba(255,255,255,.04);border-radius:8px;padding:.25rem;}
+    .tab{padding:.5rem 1rem;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .2s;}
+    .tab.active{background:rgba(255,255,255,.1);color:white;}
+
+    /* RESPONSIVE */
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%);transition:transform .3s;}
+      .sidebar.open{transform:translateX(0);}
+      .main{margin-left:0;}
+      .form-grid{grid-template-columns:1fr;}
+      .metrics-grid{grid-template-columns:1fr 1fr;}
+    }
+
+    /* EMPTY STATE */
+    .empty{text-align:center;padding:3rem;color:var(--muted);}
+    .empty i{font-size:2.5rem;margin-bottom:1rem;opacity:.3;}
+
+    /* TOAST */
+    #crmToast{position:fixed;top:1rem;right:1rem;z-index:99999;display:flex;flex-direction:column;gap:.5rem;}
+    .toast-item{padding:.8rem 1.2rem;border-radius:10px;font-size:.85rem;font-weight:600;background:#0f172a;border:1px solid var(--border);color:white;box-shadow:0 8px 25px rgba(0,0,0,.5);animation:toastIn .3s ease;display:flex;align-items:center;gap:8px;}
+    @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="logo"><i class="fas fa-layer-group"></i> Spesfidem CRM</div>
+
+    <div class="nav-section">Principal</div>
+    <a class="nav-item active" onclick="showPage('dashboard')" href="#"><i class="fas fa-chart-pie"></i> Dashboard</a>
+    <a class="nav-item" onclick="showPage('clientes')" href="#"><i class="fas fa-users"></i> Clientes</a>
+    <a class="nav-item" onclick="showPage('cotizaciones')" href="#"><i class="fas fa-file-invoice-dollar"></i> Cotizaciones</a>
+
+    <div class="nav-section" id="adminNav">Solo Admin</div>
+    <a class="nav-item admin-only" onclick="showPage('precios')" href="#"><i class="fas fa-tags"></i> Precios</a>
+    <a class="nav-item admin-only" onclick="showPage('reportes')" href="#"><i class="fas fa-chart-bar"></i> Reportes</a>
+
+    <div class="nav-section">Sistema</div>
+    <a class="nav-item" href="admin.html"><i class="fas fa-cogs"></i> Panel Admin</a>
+    <a class="nav-item" href="production.html"><i class="fas fa-industry"></i> Producción</a>
+    <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Sitio Web</a>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="user-info">
+          <div class="name" id="userName">Cargando...</div>
+          <div class="role" id="userRole">—</div>
+        </div>
+      </div>
+      <button class="nav-item" onclick="CrmAuth.logout()" style="margin-top:.5rem;color:#f87171;">
+        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div><h1><i class="fas fa-chart-pie" style="color:var(--accent);margin-right:.5rem;font-size:1.3rem;"></i>Dashboard</h1>
+          <div class="sub">Resumen ejecutivo del negocio</div></div>
+        <div style="color:var(--muted);font-size:.8rem;" id="syncStatus">Sincronizando...</div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card accent"><div class="metric-icon"><i class="fas fa-dollar-sign"></i></div>
+          <div class="metric-value" id="m-total">$0</div><div class="metric-label">Total Cotizado (mes)</div></div>
+        <div class="metric-card success"><div class="metric-icon"><i class="fas fa-users"></i></div>
+          <div class="metric-value" id="m-clients">0</div><div class="metric-label">Clientes Activos</div></div>
+        <div class="metric-card warning"><div class="metric-icon"><i class="fas fa-hourglass-half"></i></div>
+          <div class="metric-value" id="m-pending">0</div><div class="metric-label">Cotizaciones Pendientes</div></div>
+        <div class="metric-card danger"><div class="metric-icon"><i class="fas fa-tools"></i></div>
+          <div class="metric-value" id="m-making">0</div><div class="metric-label">En Fabricación</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title"><i class="fas fa-clock"></i>Últimas Cotizaciones</div>
+          <button class="btn btn-primary btn-sm" onclick="showPage('clientes')"><i class="fas fa-plus"></i> Nuevo Cliente</button></div>
+        <div class="panel-body"><div class="table-wrap"><table>
+          <thead><tr><th>Cliente</th><th>Producto</th><th>Total</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
+          <tbody id="recent-tbody"><tr><td colspan="6" class="empty"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr></tbody>
+        </table></div></div>
+      </div>
+    </div><!-- /dashboard -->
+
+    <!-- ══ CLIENTES ══ -->
+    <div class="page" id="page-clientes">
+      <div class="topbar">
+        <div><h1><i class="fas fa-users" style="color:var(--accent);margin-right:.5rem;font-size:1.3rem;"></i>Clientes</h1>
+          <div class="sub">Gestión de perfiles y cotizaciones</div></div>
+        <button class="btn btn-primary" onclick="openNewClientModal()"><i class="fas fa-user-plus"></i> Nuevo Cliente</button>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="clientSearch" placeholder="Buscar cliente..." oninput="filterClients()"></div>
+          <div style="display:flex;gap:.5rem;">
+            <select class="form-control" id="filterType" onchange="filterClients()" style="width:auto;padding:.5rem .8rem;font-size:.82rem;">
+              <option value="">Todos los tipos</option>
+              <option value="Nuevo">Nuevo</option>
+              <option value="Frecuente">Frecuente</option>
+              <option value="VIP">VIP</option>
+              <option value="Empresa">Empresa</option>
+            </select>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="table-wrap"><table>
+            <thead><tr><th>Cliente</th><th>Teléfono</th><th>Ciudad</th><th>Tipo</th><th>Cotizaciones</th><th>Última</th><th></th></tr></thead>
+            <tbody id="clients-tbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div><!-- /clientes -->
+
+    <!-- ══ COTIZACIONES ══ -->
+    <div class="page" id="page-cotizaciones">
+      <div class="topbar">
+        <div><h1><i class="fas fa-file-invoice-dollar" style="color:var(--accent);margin-right:.5rem;font-size:1.3rem;"></i>Historial de Cotizaciones</h1>
+          <div class="sub" id="quotations-sub">Todas las cotizaciones del sistema</div></div>
+        <div style="display:flex;gap:.5rem">
+          <select class="form-control" id="filterStatus" onchange="loadAllQuotations()" style="width:auto;padding:.5rem;font-size:.82rem;">
+            <option value="">Todos los estados</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Aprobada">Aprobada</option>
+            <option value="En Fabricación">En Fabricación</option>
+            <option value="Entregada">Entregada</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-body">
+          <div class="table-wrap"><table>
+            <thead><tr><th>N° Cotiz.</th><th>Cliente</th><th>Producto</th><th>Total</th><th>Estado</th><th>Asesor</th><th>Fecha</th><th></th></tr></thead>
+            <tbody id="quotations-tbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div><!-- /cotizaciones -->
+
+    <!-- ══ PRECIOS ══ -->
+    <div class="page" id="page-precios">
+      <div class="topbar">
+        <div><h1><i class="fas fa-tags" style="color:var(--accent);margin-right:.5rem;font-size:1.3rem;"></i>Gestión de Precios</h1>
+          <div class="sub">Actualiza precios y se reflejan en nuevas cotizaciones</div></div>
+        <button class="btn btn-success" onclick="savePrices()"><i class="fas fa-save"></i> Guardar Cambios</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;" id="pricesGrid">
+        <div class="panel"><div class="panel-header"><div class="panel-title"><i class="fas fa-border-all"></i>Perfiles por Metro Lineal</div></div>
+          <div class="panel-body" id="profilePrices"></div></div>
+        <div class="panel"><div class="panel-header"><div class="panel-title"><i class="fas fa-border-none"></i>Vidrios ($/m²)</div></div>
+          <div class="panel-body" id="glassPrices"></div></div>
+        <div class="panel"><div class="panel-header"><div class="panel-title"><i class="fas fa-tools"></i>Extras y Accesorios</div></div>
+          <div class="panel-body" id="extraPrices"></div></div>
+      </div>
+    </div><!-- /precios -->
+
+    <!-- ══ REPORTES ══ -->
+    <div class="page" id="page-reportes">
+      <div class="topbar"><h1><i class="fas fa-chart-bar" style="color:var(--accent);margin-right:.5rem;font-size:1.3rem;"></i>Reportes</h1></div>
+      <div class="panel"><div class="panel-body">
+        <p style="color:var(--muted);">Próximamente: reportes por fecha, por vendedor, por tipo de producto y exportación a Excel.</p>
+      </div></div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: NUEVO/EDITAR CLIENTE -->
+  <div class="modal-overlay" id="clientModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="clientModalTitle"><i class="fas fa-user-plus" style="color:var(--accent);margin-right:.5rem;"></i>Nuevo Cliente</h2>
+        <button class="close-btn" onclick="closeModal('clientModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="clientId">
+        <div class="form-grid">
+          <div class="form-group"><label>Nombre Completo *</label><input class="form-control" id="cf-name" placeholder="Ej: Carlos Ramírez" required></div>
+          <div class="form-group"><label>Teléfono *</label><input class="form-control" id="cf-phone" placeholder="3XX XXX XXXX"></div>
+          <div class="form-group"><label>WhatsApp</label><input class="form-control" id="cf-whatsapp" placeholder="3XX XXX XXXX"></div>
+          <div class="form-group"><label>Correo electrónico</label><input class="form-control" id="cf-email" type="email" placeholder="correo@ejemplo.com"></div>
+          <div class="form-group full"><label>Dirección</label><input class="form-control" id="cf-address" placeholder="Calle, Barrio, Ciudad"></div>
+          <div class="form-group"><label>Ciudad</label><input class="form-control" id="cf-city" placeholder="Ej: Bogotá"></div>
+          <div class="form-group"><label>Tipo de Cliente</label>
+            <select class="form-control" id="cf-type">
+              <option value="Nuevo">Nuevo</option>
+              <option value="Frecuente">Frecuente</option>
+              <option value="VIP">VIP</option>
+              <option value="Empresa">Empresa</option>
+            </select>
+          </div>
+          <div class="form-group full"><label>Notas</label><textarea class="form-control" id="cf-notes" rows="2" style="resize:vertical" placeholder="Observaciones, referencias, etc."></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('clientModal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveClient()"><i class="fas fa-save"></i> Guardar Cliente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HISTORIAL DE COTIZACIONES DEL CLIENTE -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-box" style="max-width:780px;">
+      <div class="modal-header">
+        <h2 id="histTitle"><i class="fas fa-history" style="color:var(--accent);margin-right:.5rem;"></i>Historial</h2>
+        <button class="close-btn" onclick="closeModal('historyModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" id="histBody">Cargando...</div>
+    </div>
+  </div>
+
+  <div id="crmToast"></div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/crm-auth.js"></script>
+  <script src="js/crm-data.js"></script>
+  <script>
+  // ── STATE ──
+  let allClients    = [];
+  let allQuotations = [];
+  let currentClientId = null;
+
+  // ── INIT ──
+  async function init() {
+    // Auth guard
+    if (!CrmAuth.requireAuth()) return;
+
+    const user = CrmAuth.currentUser;
+    document.getElementById('userName').textContent    = user.name;
+    document.getElementById('userRole').textContent    = user.role;
+    document.getElementById('userAvatar').textContent  = user.name.charAt(0).toUpperCase();
+
+    // Hide admin-only items for vendedores
+    if (!CrmAuth.isAdmin()) {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+      document.getElementById('adminNav').style.display = 'none';
+    }
+
+    // Init Firebase
+    await window.SpesFirebase.initFirebase();
+    const status = document.getElementById('syncStatus');
+    status.textContent = window.SpesFirebase.isFirebaseReady() ? '🔥 Firebase conectado' : '💾 Modo local';
+
+    await loadAll();
+  }
+
+  async function loadAll() {
+    allClients    = await CrmClients.getAll();
+    allQuotations = getAllQuotationsFromClients(allClients);
+    renderDashboard();
+    renderClients(allClients);
+    renderQuotationsTable(allQuotations);
+    if (CrmAuth.isAdmin()) renderPricesPage();
+  }
+
+  function getAllQuotationsFromClients(clients) {
+    const all = [];
+    clients.forEach(c => { (c.quotations || []).forEach(q => all.push({ ...q, _clientName: c.fullName || c.name })); });
+    return all.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  // ── NAVIGATION ──
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name)?.classList.add('active');
+    event?.currentTarget?.classList.add('active');
+    if (name === 'cotizaciones') loadAllQuotations();
+    if (name === 'precios' && CrmAuth.isAdmin()) renderPricesPage();
+  }
+
+  // ── DASHBOARD ──
+  function renderDashboard() {
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    let totalMes = 0, pending = 0, making = 0;
+    allQuotations.forEach(q => {
+      if (q.createdAt?.startsWith(thisMonth)) totalMes += q.grandTotal || 0;
+      if (q.status === 'Pendiente') pending++;
+      if (q.status === 'En Fabricación') making++;
+    });
+    document.getElementById('m-total').textContent   = '$' + Math.round(totalMes).toLocaleString('es-CO');
+    document.getElementById('m-clients').textContent = allClients.length;
+    document.getElementById('m-pending').textContent = pending;
+    document.getElementById('m-making').textContent  = making;
+
+    const tbody = document.getElementById('recent-tbody');
+    const recent = allQuotations.slice(0, 10);
+    tbody.innerHTML = recent.length ? recent.map(q => `
+      <tr>
+        <td>${q._clientName || '—'}</td>
+        <td>${q.items?.[0]?.product || q.product || '—'}</td>
+        <td><strong>$${(q.grandTotal||0).toLocaleString('es-CO')}</strong></td>
+        <td><span class="badge ${badgeClass(q.status)}">${q.status || '—'}</span></td>
+        <td>${fmtDate(q.createdAt)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewHistory('${q.clientId}')"><i class="fas fa-eye"></i></button></td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty"><i class="fas fa-inbox"></i><br>Sin cotizaciones aún</td></tr>';
+  }
+
+  // ── CLIENTS ──
+  function renderClients(clients) {
+    const tbody = document.getElementById('clients-tbody');
+    tbody.innerHTML = clients.length ? clients.map(c => `
+      <tr>
+        <td>
+          <div style="font-weight:600;">${c.fullName || c.name || '—'}</div>
+          <div style="font-size:.75rem;color:var(--muted);">${c.email || ''}</div>
+        </td>
+        <td>${c.cellphone || c.phone || '—'}</td>
+        <td>${c.city || '—'}</td>
+        <td><span class="type-chip type-${(c.clientType||'nuevo').toLowerCase()}">${c.clientType || 'Nuevo'}</span></td>
+        <td>${(c.quotations||[]).length}</td>
+        <td>${c.lastQuotation ? fmtDate(c.lastQuotation) : '—'}</td>
+        <td>
+          <div style="display:flex;gap:.4rem;">
+            <button class="btn btn-ghost btn-sm" title="Ver historial" onclick="viewHistory('${c.id}')"><i class="fas fa-history"></i></button>
+            <button class="btn btn-ghost btn-sm" title="Editar" onclick="editClient('${c.id}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm" title="Eliminar" onclick="deleteClient('${c.id}')"><i class="fas fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="7" class="empty"><i class="fas fa-users-slash"></i><br>No hay clientes registrados</td></tr>';
+  }
+
+  function filterClients() {
+    const q = document.getElementById('clientSearch').value.toLowerCase();
+    const type = document.getElementById('filterType').value;
+    const filtered = allClients.filter(c => {
+      const matchQ = !q || (c.fullName||c.name||'').toLowerCase().includes(q) || (c.cellphone||c.phone||'').includes(q) || (c.city||'').toLowerCase().includes(q);
+      const matchT = !type || (c.clientType||'') === type;
+      return matchQ && matchT;
+    });
+    renderClients(filtered);
+  }
+
+  // ── CLIENT CRUD ──
+  function openNewClientModal() {
+    document.getElementById('clientId').value = '';
+    document.getElementById('clientModalTitle').innerHTML = '<i class="fas fa-user-plus" style="color:var(--accent);margin-right:.5rem;"></i>Nuevo Cliente';
+    ['name','phone','whatsapp','email','address','city','notes'].forEach(f => document.getElementById('cf-'+f).value = '');
+    document.getElementById('cf-type').value = 'Nuevo';
+    document.getElementById('clientModal').classList.add('open');
+  }
+
+  async function editClient(id) {
+    const c = allClients.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('clientId').value = id;
+    document.getElementById('clientModalTitle').innerHTML = '<i class="fas fa-edit" style="color:var(--accent);margin-right:.5rem;"></i>Editar Cliente';
+    document.getElementById('cf-name').value     = c.fullName || c.name || '';
+    document.getElementById('cf-phone').value    = c.cellphone || c.phone || '';
+    document.getElementById('cf-whatsapp').value = c.whatsapp || c.cellphone || '';
+    document.getElementById('cf-email').value    = c.email || '';
+    document.getElementById('cf-address').value  = c.address || '';
+    document.getElementById('cf-city').value     = c.city || '';
+    document.getElementById('cf-type').value     = c.clientType || 'Nuevo';
+    document.getElementById('cf-notes').value    = c.notes || '';
+    document.getElementById('clientModal').classList.add('open');
+  }
+
+  async function saveClient() {
+    const id   = document.getElementById('clientId').value;
+    const data = {
+      fullName:   document.getElementById('cf-name').value.trim(),
+      cellphone:  document.getElementById('cf-phone').value.trim(),
+      whatsapp:   document.getElementById('cf-whatsapp').value.trim(),
+      email:      document.getElementById('cf-email').value.trim(),
+      address:    document.getElementById('cf-address').value.trim(),
+      city:       document.getElementById('cf-city').value.trim(),
+      clientType: document.getElementById('cf-type').value,
+      notes:      document.getElementById('cf-notes').value.trim()
+    };
+    if (!data.fullName) { toast('El nombre es obligatorio', 'warning'); return; }
+    if (id) data.id = id;
+    await CrmClients.save(data);
+    closeModal('clientModal');
+    toast('Cliente guardado correctamente', 'success');
+    await loadAll();
+  }
+
+  async function deleteClient(id) {
+    if (!confirm('¿Eliminar este cliente? Se moverá a la papelera.')) return;
+    await CrmClients.delete(id);
+    toast('Cliente eliminado', 'warning');
+    await loadAll();
+  }
+
+  // ── QUOTATIONS ──
+  async function loadAllQuotations() {
+    const status = document.getElementById('filterStatus').value;
+    let qs = allQuotations;
+    if (status) qs = qs.filter(q => q.status === status);
+    renderQuotationsTable(qs);
+  }
+
+  function renderQuotationsTable(qs) {
+    const tbody = document.getElementById('quotations-tbody');
+    tbody.innerHTML = qs.length ? qs.map(q => `
+      <tr>
+        <td><code style="font-size:.7rem;color:var(--muted);">${q.id}</code></td>
+        <td>${q._clientName || '—'}</td>
+        <td>${q.items?.[0]?.product || q.product || '—'}</td>
+        <td><strong>$${(q.grandTotal||0).toLocaleString('es-CO')}</strong></td>
+        <td><span class="badge ${badgeClass(q.status)}">${q.status||'—'}</span></td>
+        <td>${q.createdBy || '—'}</td>
+        <td>${fmtDate(q.createdAt)}</td>
+        <td>
+          <div style="display:flex;gap:.4rem;">
+            <button class="btn btn-ghost btn-sm" title="Ver" onclick="viewHistory('${q.clientId}')"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-ghost btn-sm" title="Exportar PDF" onclick="downloadPDF('${q.clientId}','${q.id}')"><i class="fas fa-file-pdf"></i></button>
+            <button class="btn btn-ghost btn-sm" title="Enviar WhatsApp" onclick="waQ('${q.clientId}','${q.id}')"><i class="fab fa-whatsapp" style="color:#25d366;"></i></button>
+          </div>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="8" class="empty"><i class="fas fa-inbox"></i><br>Sin cotizaciones</td></tr>';
+  }
+
+  // ── HISTORY MODAL ──
+  async function viewHistory(clientId) {
+    currentClientId = clientId;
+    const c    = allClients.find(x => x.id === clientId);
+    if (!c) return;
+    document.getElementById('histTitle').innerHTML = `<i class="fas fa-history" style="color:var(--accent);margin-right:.5rem;"></i>${c.fullName || c.name} — Cotizaciones`;
+    const qs   = await CrmQuotations.getForClient(clientId);
+    const body = document.getElementById('histBody');
+
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border);font-size:.85rem;">
+        <div><span style="color:var(--muted);">Teléfono:</span> ${c.cellphone||c.phone||'—'}</div>
+        <div><span style="color:var(--muted);">Ciudad:</span> ${c.city||'—'}</div>
+        <div><span style="color:var(--muted);">Correo:</span> ${c.email||'—'}</div>
+        <div><span style="color:var(--muted);">Tipo:</span> <span class="type-chip type-${(c.clientType||'nuevo').toLowerCase()}">${c.clientType||'Nuevo'}</span></div>
+      </div>` +
+      (qs.length ? qs.map(q => `
+      <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.8rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+          <div><code style="font-size:.72rem;color:var(--muted);">${q.id}</code>
+            <span class="badge ${badgeClass(q.status)}" style="margin-left:.4rem;">${q.status}</span></div>
+          <span style="font-size:.75rem;color:var(--muted);">${fmtDate(q.createdAt)}</span>
+        </div>
+        ${(q.items||[]).map(i=>`<div style="font-size:.82rem;padding:.2rem 0;color:#94a3b8;">• ${i.product} (${i.quantity}) — ${i.size||''} ${i.glass||''} — $${(i.total||0).toLocaleString('es-CO')}</div>`).join('')}
+        <div style="text-align:right;margin-top:.6rem;font-weight:700;color:white;">Total: $${(q.grandTotal||0).toLocaleString('es-CO')}</div>
+        <div style="display:flex;gap:.4rem;margin-top:.8rem;flex-wrap:wrap;">
+          <select class="form-control" style="max-width:180px;padding:.35rem .5rem;font-size:.78rem;" onchange="changeStatus('${c.id}','${q.id}',this.value)">
+            ${['Pendiente','Aprobada','En Fabricación','Entregada','Cancelada'].map(s=>`<option value="${s}" ${q.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="downloadPDF('${c.id}','${q.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
+          <button class="btn btn-ghost btn-sm" onclick="waQ('${c.id}','${q.id}')"><i class="fab fa-whatsapp" style="color:#25d366;"></i> WhatsApp</button>
+          <button class="btn btn-ghost btn-sm" onclick="dupQ('${c.id}','${q.id}')"><i class="fas fa-copy"></i> Duplicar</button>
+        </div>
+      </div>`).join('') : '<div class="empty"><i class="fas fa-inbox"></i><br>Sin cotizaciones</div>');
+
+    document.getElementById('historyModal').classList.add('open');
+  }
+
+  async function changeStatus(cId, qId, status) {
+    await CrmQuotations.updateStatus(cId, qId, status);
+    toast('Estado actualizado', 'success');
+    await loadAll();
+  }
+
+  async function downloadPDF(cId, qId) {
+    const c  = allClients.find(x => x.id === cId);
+    const qs = await CrmQuotations.getForClient(cId);
+    const q  = qs.find(x => x.id === qId);
+    if (!c || !q) return toast('No se encontró la cotización', 'danger');
+    await exportQuotationPDF(c, q);
+  }
+
+  async function waQ(cId, qId) {
+    const c  = allClients.find(x => x.id === cId);
+    const qs = await CrmQuotations.getForClient(cId);
+    const q  = qs.find(x => x.id === qId);
+    if (!c || !q) return toast('No se encontró la cotización', 'danger');
+    sendWhatsApp(c.cellphone || c.phone, c, q);
+  }
+
+  async function dupQ(cId, qId) {
+    await CrmQuotations.duplicate(cId, qId);
+    toast('Cotización duplicada', 'success');
+    await viewHistory(cId);
+  }
+
+  // ── PRICES PAGE ──
+  async function renderPricesPage() {
+    const prices = await CrmPrices.getAll();
+    // Profiles
+    document.getElementById('profilePrices').innerHTML = Object.entries(prices.profiles||{}).map(([serie, colors]) =>
+      `<div style="margin-bottom:1rem;">
+        <div style="font-weight:700;font-size:.85rem;color:var(--accent);margin-bottom:.5rem;">Serie ${serie}</div>
+        ${Object.entries(colors).map(([color,val])=>`
+          <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.5rem;">
+            <label style="width:80px;font-size:.78rem;text-transform:capitalize;">${color}</label>
+            <input type="number" class="form-control" style="flex:1;" value="${val}"
+              data-section="profiles" data-key="${serie}" data-sub="${color}" onchange="collectPrice(this)">
+          </div>`).join('')}
+      </div>`).join('');
+    // Glass
+    document.getElementById('glassPrices').innerHTML = Object.entries(prices.glass||{}).map(([type, data]) =>
+      `<div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem;">
+        <label style="flex:1;font-size:.8rem;">${type}</label>
+        <input type="number" class="form-control" style="width:120px;" value="${data.priceM2||0}"
+          data-section="glass" data-key="${type}" onchange="collectPrice(this)">
+        <span style="color:var(--muted);font-size:.75rem;">/m²</span>
+      </div>`).join('');
+    // Extras
+    document.getElementById('extraPrices').innerHTML = Object.entries(prices.extras||{}).map(([name,val]) =>
+      `<div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem;">
+        <label style="flex:1;font-size:.8rem;">${name}</label>
+        <input type="number" class="form-control" style="width:120px;" value="${val||0}"
+          data-section="extras" data-key="${name}" onchange="collectPrice(this)">
+      </div>`).join('');
+  }
+
+  let _pricesEdit = {};
+  async function collectPrice(input) {
+    if (!_pricesEdit._raw) _pricesEdit._raw = await CrmPrices.getAll();
+    const s = input.dataset.section, k = input.dataset.key, sub = input.dataset.sub;
+    const v = parseFloat(input.value) || 0;
+    if (sub) { _pricesEdit._raw[s][k][sub] = v; }
+    else if (s === 'glass') { _pricesEdit._raw[s][k].priceM2 = v; }
+    else { _pricesEdit._raw[s][k] = v; }
+  }
+
+  async function savePrices() {
+    if (!_pricesEdit._raw) return toast('Sin cambios que guardar', 'warning');
+    await CrmPrices.save(_pricesEdit._raw);
+    _pricesEdit = {};
+    toast('Precios actualizados y sincronizados', 'success');
+  }
+
+  // ── HELPERS ──
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function fmtDate(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}); } catch{return iso;} }
+  function badgeClass(s) {
+    return { 'Pendiente':'badge-pending','Aprobada':'badge-approved','En Fabricación':'badge-making','Entregada':'badge-delivered','Cancelada':'badge-canceled' }[s] || 'badge-pending';
+  }
+  function toast(msg, type='success') {
+    const c = document.getElementById('crmToast');
+    const t = document.createElement('div');
+    t.className = 'toast-item';
+    const icons = { success:'fa-check-circle', warning:'fa-exclamation-triangle', danger:'fa-times-circle', info:'fa-info-circle' };
+    const colors = { success:'#10b981', warning:'#f59e0b', danger:'#ef4444', info:'#38bdf8' };
+    t.innerHTML = `<i class="fas ${icons[type]||icons.info}" style="color:${colors[type]||colors.info};"></i> ${msg}`;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3500);
+  }
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+  // Start
+  window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
