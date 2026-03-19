@@ -2935,3 +2935,101 @@ body.high-contrast .lang-menu-header {
     margin-bottom: 0.5rem;
     text-transform: uppercase;
 }
+
+/* --- PREMIUM MOBILE OPTIMIZATIONS (FIX OVERFLOW & OVERLAP) --- */
+@media (max-width: 600px) {
+    /* 1. Header & Logo scaling */
+    header {
+        padding: 0.8rem 0 !important;
+    }
+    
+    .logo-premium-final {
+        gap: 12px !important;
+    }
+    
+    .logo-icon-premium {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    
+    .logo-brand-premium {
+        font-size: 1.6rem !important;
+        letter-spacing: 2px !important;
+    }
+    
+    .logo-subtitle-premium {
+        font-size: 0.7rem !important;
+        letter-spacing: 3px !important;
+    }
+
+    /* 2. Hero Section Refinement */
+    .hero {
+        padding: 8rem 1rem 4rem !important;
+    }
+    
+    .hero h1 {
+        font-size: 3rem !important;
+        line-height: 1.1;
+    }
+    
+    .hero h2 {
+        font-size: 1.4rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .hero p {
+        font-size: 1.1rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 2rem !important;
+        max-width: 100% !important;
+    }
+
+    /* 3. Contact Buttons Grid Fix */
+    .contact-buttons-container, 
+    div[style*="grid-template-columns: repeat(3, auto)"] {
+        grid-template-columns: 1fr !important; /* Stack vertically for clarity */
+        gap: 0.8rem !important;
+    }
+    
+    .btn-contact-action {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 1.2rem !important;
+        font-size: 1.1rem !important;
+    }
+
+    /* 4. Gallery & Cards Legibility */
+    .glass-panel {
+        padding: 2rem 1.5rem !important;
+        border-radius: 1.5rem !important;
+    }
+    
+    .section-title-elite {
+        font-size: 2.2rem !important;
+    }
+
+    /* 5. Language Bar adjustment */
+    .language-selector {
+        transform: scale(0.85);
+        transform-origin: right center;
+    }
+
+    /* 6. Fix for overlapping text in gallery cards */
+    .product-card-premium h3 {
+        font-size: 1.5rem !important;
+    }
+    
+    .product-card-premium p {
+        font-size: 0.9rem !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .logo-brand-premium {
+        font-size: 1.3rem !important;
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem !important;
+    }
+}
