@@ -4,7 +4,7 @@
 // ============================================================
 
 const CRM_LOCAL_USERS = {
-  'jhon@spesfidem.com':   { pass: 'Spesfidem2026!', name: 'Jhon Espinosa',  role: 'admin'    },
+  'jhon@spesfidem.com':   { pass: 'Ventas2026!', name: 'Jhon Espinosa',  role: 'admin'    },
   'felipe@spesfidem.com': { pass: 'Felipe2026!',    name: 'Felipe Molina',  role: 'admin'    },
   'ventas@spesfidem.com': { pass: 'Ventas2026!',    name: 'Ventas Spesfidem',role: 'vendedor'},
   'sergio@spesfidem.com': { pass: 'Sergio2026!',    name: 'Sergio Suarez',  role: 'vendedor' },
