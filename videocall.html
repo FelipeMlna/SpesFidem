@@ -994,15 +994,15 @@
                 const roomId = Math.random().toString(36).substring(2,8).toUpperCase();
                 console.log('[Spesfidem] 🎲 Sala:', roomId);
 
-                // 2. URL de la sala - Restauramos la versión de React (Vite) en el puerto 5173
-                const hostname = window.location.hostname;
-                const viteUrl = `${window.location.protocol}//${hostname}:5173/room/${roomId}`;
-                
-                // Backup: La sala standalone (no depende de Vite)
+                // 2. URL de la sala - Restauramos la versión de React pero construida para Producción (ya no depende del puerto 5173)
+                // Se sirve en la misma ruta que la página web
                 let baseUrl = `${window.location.protocol}//${window.location.host}`;
                 if (window.location.protocol === 'file:') {
                     baseUrl = window.location.href.replace(/videocall\.html.*$/, '');
                 }
+                const viteUrl = baseUrl.startsWith('file:') ? `consultoria/index.html?room=${roomId}` : `${baseUrl}/consultoria/?room=${roomId}`;
+                
+                // Backup: La sala standalone (no depende de Vite)
                 const standaloneUrl = baseUrl.startsWith('file:') ? 'consulta.html' : (baseUrl + '/consulta.html');
                 const fallbackUrl = `${standaloneUrl}?room=${roomId}`;
                 
