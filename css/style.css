@@ -2936,6 +2936,23 @@ body.high-contrast .lang-menu-header {
     text-transform: uppercase;
 }
 
+/* --- CONTACT BUTTON GRIDS (Desktop Default) --- */
+.contact-grid-row1 {
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    gap: 1rem;
+    justify-content: start;
+    margin-bottom: 1.2rem;
+}
+
+.contact-grid-row2 {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 1rem;
+    justify-content: start;
+    margin-bottom: 3rem;
+}
+
 /* --- PREMIUM MOBILE OPTIMIZATIONS (FIX OVERFLOW & OVERLAP) --- */
 @media (max-width: 600px) {
     /* 1. Header & Logo scaling */
@@ -2985,10 +3002,15 @@ body.high-contrast .lang-menu-header {
     }
 
     /* 3. Contact Buttons Grid Fix */
-    .contact-buttons-container, 
-    div[style*="grid-template-columns: repeat(3, auto)"] {
-        grid-template-columns: 1fr !important; /* Stack vertically for clarity */
-        gap: 0.8rem !important;
+    .contact-grid-row1 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+
+    .contact-grid-row2 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+        margin-bottom: 2rem;
     }
     
     .btn-contact-action {
