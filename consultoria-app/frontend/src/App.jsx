@@ -77,23 +77,21 @@ function App() {
     setRoomId(id);
     if (socket) socket.emit('join-room', id);
     setJoined(true);
-    
-    // Evitar que el historial se pierda si la app se minimiza
+
+    // Guardar sala en URL para persistencia
     const url = new URL(window.location);
     url.searchParams.set('room', id);
     window.history.replaceState({}, '', url);
-    
-    // Auto-generate WhatsApp notification to the admin (573046291152)
-    const roomUrl = `${window.location.protocol}//${window.location.host}/consultoria/?room=${id}`;
-    const fallbackUrl = `${window.location.protocol}//${window.location.host}/consulta.html?room=${id}`;
-    const phone = '573046291152';
-    const waMessage = `Nueva solicitud de consultoría Spesfidem, cliente esperando\n\nSala: ${id}\nEnlace Principal: ${roomUrl}\nEnlace Alterno: ${fallbackUrl}`;
-    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(waMessage)}`;
-    
-    // Open WhatsApp in a new tab smoothly
-    setTimeout(() => {
-      window.open(waUrl, '_blank');
-    }, 300);
+
+    // Notificar al asesor en segundo plano (fetch silencioso via wa.me sin abrir pestaña visible)
+    try {
+      const roomUrl = `${window.location.protocol}//${window.location.host}/consultoria/?room=${id}`;
+      const phone = '573046291152';
+      const waMessage = `Nueva solicitud de consultoría Spesfidem, cliente esperando\n\nSala: ${id}\nEnlace: ${roomUrl}`;
+      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(waMessage)}`;
+      // Guardamos el enlace por si el asesor necesita abrirlo manualmente
+      sessionStorage.setItem('spesfidem_wa_link', waUrl);
+    } catch(e) {}
   };
 
   // ── Join existing room ──
@@ -137,21 +135,17 @@ function App() {
           </div>
 
           <h1 className="text-3xl font-bold font-['Outfit'] mb-2 text-white">Consultoría Visual</h1>
-          <p className="text-text-muted mb-8 text-sm">Plataforma colaborativa en tiempo real · Spesfidem</p>
+          <p className="text-text-muted mb-6 text-sm">Spesfidem · Sesión de video en tiempo real</p>
 
+          {/* Botón principal: Entrar a sala */}
           <button onClick={createRoom}
-            className="w-full bg-accent hover:bg-sky-400 text-slate-900 font-bold py-3.5 px-4 rounded-xl transition-all shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] mb-6 flex items-center justify-center gap-3 text-base">
-            <i className="fas fa-plus-circle"></i> Crear y Notificar a Spesfidem
+            className="w-full bg-accent hover:bg-sky-400 text-slate-900 font-bold py-4 px-4 rounded-xl transition-all shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] mb-4 flex items-center justify-center gap-3 text-lg">
+            <i className="fas fa-video"></i> Entrar a mi sala
           </button>
 
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-px bg-white/10 flex-1"></div>
-            <span className="text-xs text-text-muted font-semibold uppercase tracking-widest">o unirte</span>
-            <div className="h-px bg-white/10 flex-1"></div>
-          </div>
-
+          {/* Unirse con código */}
           <form onSubmit={joinRoom} className="flex gap-2">
-            <input type="text" placeholder="Código de sala (ej: AB34XZ)"
+            <input type="text" placeholder="Tengo un código de sala…"
               value={inputRoom} onChange={e => setInputRoom(e.target.value)}
               className="flex-1 bg-white/5 border border-white/10 focus:border-accent rounded-xl px-4 py-3 text-white outline-none transition-colors text-sm" />
             <button type="submit" disabled={!inputRoom.trim()}
