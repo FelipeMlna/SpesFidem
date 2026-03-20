@@ -867,6 +867,28 @@
         <h1>Consultoría Visual en Tiempo Real</h1>
         <p>Conéctese a nuestra nueva sala virtual. Muestre su espacio, revise diseños y defina medidas en conjunto con el asesor, todo en tiempo real.</p>
 
+        <!-- Editable Room Code Input -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem; margin-bottom: 2rem; max-width: 320px; margin-left: auto; margin-right: auto;">
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;">Código de Sala Personalizado</label>
+            <div style="position: relative; width: 100%;">
+                <input type="text" id="customRoomId" maxlength="15" placeholder="EJ: SALA-01" style="
+                    width: 100%; padding: 1rem 3.5rem 1rem 1.2rem; background: rgba(255,255,255,0.05);
+                    border: 2px solid rgba(56, 189, 248, 0.3); border-radius: 16px; color: white;
+                    font-family: monospace; font-size: 1.4rem; font-weight: 800; text-align: center;
+                    letter-spacing: 2px; text-transform: uppercase; outline: none; transition: all 0.3s;
+                " oninput="this.value = this.value.toUpperCase().replace(/\s/g, '-'); updateLinksPreview();" onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 15px var(--accent-glow)'" onblur="this.style.borderColor='rgba(56, 189, 248, 0.3)'; this.style.boxShadow='none'">
+                <button onclick="generateNewId()" title="Regenerar Código" style="
+                    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+                    background: var(--accent); border: none; width: 40px; height: 40px;
+                    border-radius: 12px; color: var(--primary); cursor: pointer;
+                    display: flex; align-items: center; justify-content: center; transition: all 0.3s;
+                " onmouseover="this.style.transform='translateY(-50%) scale(1.1)'" onmouseout="this.style.transform='translateY(-50%) scale(1)'">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">Puedes escribir un nombre de sala único o usar el generado.</p>
+        </div>
+
         <button onclick="iniciarConsultoria()" class="btn-videocall" id="btnVideoCall">
             <i class="fas fa-video"></i>
             INICIAR VIDEO CONSULTA
@@ -972,41 +994,40 @@
 
         let currentRoomUrlGlobal = '';
 
-        function copyRoomLink() {
-            if (!currentRoomUrlGlobal) return;
-            navigator.clipboard.writeText(currentRoomUrlGlobal).then(() => {
-                const btn = document.getElementById('btnCopyLink');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = `<i class="fas fa-check" style="color:#10b981"></i> ¡Copiado a portapapeles!`;
-                btn.style.color = '#10b981';
-                btn.style.borderColor = '#10b981';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.style.color = '#cbd5e1';
-                    btn.style.borderColor = 'rgba(255,255,255,0.15)';
-                }, 2000);
-            });
+        function generateNewId() {
+            const newId = Math.random().toString(36).substring(2,8).toUpperCase();
+            document.getElementById('customRoomId').value = newId;
+            updateLinksPreview();
+        }
+
+        function updateLinksPreview() {
+            // No-op for now, link update happens in iniciarConsultoria
         }
 
         function iniciarConsultoria() {
             try {
-                // 1. Generar ID de sala
-                const roomId = Math.random().toString(36).substring(2,8).toUpperCase();
+                // 1. Obtener ID de sala del input
+                let roomId = document.getElementById('customRoomId').value.trim().toUpperCase();
+                
+                // Si está vacío, generar uno
+                if (!roomId) {
+                    roomId = Math.random().toString(36).substring(2,8).toUpperCase();
+                    document.getElementById('customRoomId').value = roomId;
+                }
+
                 console.log('[Spesfidem] 🎲 Sala:', roomId);
 
-                // 2. URL de la sala - Restauramos la versión de React pero construida para Producción (ya no depende del puerto 5173)
-                // Se sirve en la misma ruta que la página web
+                // 2. URL de la sala
                 let baseUrl = `${window.location.protocol}//${window.location.host}`;
                 if (window.location.protocol === 'file:') {
                     baseUrl = window.location.href.replace(/videocall\.html.*$/, '');
                 }
                 const viteUrl = baseUrl.startsWith('file:') ? `consultoria/index.html?room=${roomId}` : `${baseUrl}/consultoria/?room=${roomId}`;
                 
-                // Backup: La sala standalone (no depende de Vite)
+                // Backup: La sala standalone
                 const standaloneUrl = baseUrl.startsWith('file:') ? 'consulta.html' : (baseUrl + '/consulta.html');
                 const fallbackUrl = `${standaloneUrl}?room=${roomId}`;
                 
-                // Usamos la versión de React como principal
                 const finalUrl = viteUrl;
                 currentRoomUrlGlobal = finalUrl;
 
@@ -1021,15 +1042,12 @@
                 document.getElementById('btnWaModal').href = waUrl;
                 
                 // 5. Intento Automático de Apertura
-                // Al ejecutarse síncronamente al click, la mayoría de navegadores permitirán esta apertura
                 let win = window.open(waUrl, '_blank');
 
-                // Si por alguna razón window.open falla (null) o es fuertemente bloqueado, el Modal salvará la situación
                 if (!win) {
                     showToast('Pop-up bloqueado. Usa el botón "Enviar por WhatsApp"');
                 }
 
-                // Finalmente mostramos el Modal con la información general para que el usuario pueda entrar a la sala
                 document.getElementById('modalConsultoria').style.display = 'flex';
 
             } catch (error) {
@@ -1431,6 +1449,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderGallery();
             updatePreview();
+            generateNewId(); // Inicializar con un código aleatorio
         });
     </script>
 </body>
