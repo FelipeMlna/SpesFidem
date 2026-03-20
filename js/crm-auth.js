@@ -35,10 +35,8 @@ const CrmAuth = {
         sessionStorage.setItem(CRM_AUTH_KEY, JSON.stringify(this.currentUser));
         return { success: true, user: this.currentUser };
       } catch (e) {
-        if (e.code !== 'auth/network-request-failed') {
-          return { success: false, message: 'Correo o contraseña incorrectos.' };
-        }
-        // If network error, fall through to local
+        console.warn('Firebase login err:', e.code);
+        // Fall through to local fallback instead of returning false
       }
     }
 

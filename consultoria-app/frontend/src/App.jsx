@@ -208,11 +208,11 @@ function App() {
       <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-3 h-full min-h-0 overflow-y-auto lg:overflow-hidden pb-4 lg:pb-0">
 
         {/* Left: Video + Visualizer */}
-        <div className="lg:col-span-4 flex flex-col gap-3 h-[80vh] lg:h-full shrink-0 lg:shrink min-h-0">
-          <div className="flex-1 min-h-0 rounded-2xl overflow-hidden">
+        <div className="lg:col-span-4 flex flex-col gap-3 h-auto lg:h-full shrink-0 lg:shrink min-h-0">
+          <div className="h-[40vh] lg:flex-1 min-h-[250px] lg:min-h-0 rounded-2xl overflow-hidden bg-slate-800 shadow-lg border border-slate-700/50">
             <VideoCall socket={socket} roomId={roomId} role={role} />
           </div>
-          <div className="h-[38%] shrink-0">
+          <div className="h-auto lg:h-[38%] shrink-0">
             <Visualizer specs={specs} />
           </div>
         </div>
@@ -223,7 +223,7 @@ function App() {
         </div>
 
         {/* Right: Gallery */}
-        <div className="lg:col-span-4 h-[60vh] lg:h-full shrink-0 min-h-0">
+        <div className="lg:col-span-4 h-auto lg:h-full shrink-0 min-h-0">
           <Gallery socket={socket} roomId={roomId} />
         </div>
 
