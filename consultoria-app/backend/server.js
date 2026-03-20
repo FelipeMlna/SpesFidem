@@ -9,6 +9,10 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // To parse JSON bodies
 
+app.get('/api/rooms', (req, res) => {
+  res.json({ rooms: Object.keys(rooms) || [] });
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] }

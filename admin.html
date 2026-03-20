@@ -536,6 +536,12 @@
                 </div>
 
                 <div style="display: flex; gap: 0.8rem; align-items:center; flex-wrap: wrap;">
+                    <button id="btnVideocallsToggle" onclick="window.openVideocallsModal()" class="btn-primary"
+                        style="background: #0ea5e9; border:none; border-radius: 8px; cursor: pointer; display:flex; gap:0.6rem; align-items:center; color:white; padding: 0.75rem 1.25rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <i class="fas fa-video"></i> <span class="btn-text">Salas</span>
+                        <span id="activeRoomsBadge"
+                            style="background:#ef4444; color:white; padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 800; margin-left: 2px; display: none; line-height: 1;">0</span>
+                    </button>
                     <button id="btnTrashToggle" onclick="window.toggleTrashMode()" class="btn-primary"
                         style="background: #64748b; border:none; border-radius: 8px; cursor: pointer; display:flex; gap:0.6rem; align-items:center; color:white; padding: 0.75rem 1.25rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                         <i class="fas fa-trash"></i> <span class="btn-text">Ver Papelera</span>
@@ -740,6 +746,90 @@
             }
         }
     </script>
+    
+    <!-- Video Rooms Modal -->
+    <div id="videoRoomsOverlay"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:9000; display:none; justify-content:center; align-items:center;">
+        <div
+            style="background:white; padding:2rem; border-radius:10px; width:100%; max-width:500px; position:relative;">
+            <button onclick="document.getElementById('videoRoomsOverlay').style.display='none'"
+                style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:1.5rem; cursor:pointer; color:#64748b;">&times;</button>
+            <h2 style="color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:0.5rem;">
+                <i class="fas fa-video" style="color:#0ea5e9; margin-right:8px;"></i> Salas de Consulta Activas
+            </h2>
+            <div id="videoRoomsList" style="display:flex; flex-direction:column; gap:1rem; max-height: 300px; overflow-y: auto;">
+                <p style="color:#64748b; text-align:center;">Buscando salas...</p>
+            </div>
+            <div style="margin-top:1.5rem; text-align:right;">
+                <button type="button" onclick="document.getElementById('videoRoomsOverlay').style.display='none'"
+                    style="padding:10px 20px; border:1px solid #cbd5e1; background:white; border-radius:4px; font-weight:bold; cursor:pointer;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        async function fetchActiveRooms() {
+            try {
+                const hostname = window.location.hostname || 'localhost';
+                const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+                const WEBRTC_URL = isLocal ? 'http://localhost:3001' : 'https://spesfidem-video-server.onrender.com';
+                
+                const response = await fetch(`${WEBRTC_URL}/api/rooms`);
+                if (!response.ok) throw new Error('Network error');
+                
+                const data = await response.json();
+                const rooms = data.rooms || [];
+                
+                const badge = document.getElementById('activeRoomsBadge');
+                if (badge) {
+                    if (rooms.length > 0) {
+                        badge.style.display = 'inline-block';
+                        badge.textContent = rooms.length;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                const list = document.getElementById('videoRoomsList');
+                if (list && document.getElementById('videoRoomsOverlay').style.display === 'flex') {
+                    list.innerHTML = '';
+                    if (rooms.length === 0) {
+                        list.innerHTML = '<p style="color:#64748b; text-align:center; padding: 2rem 0;">No hay salas activas en este momento.</p>';
+                        return;
+                    }
+                    rooms.forEach(room => {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #e2e8f0;';
+                        
+                        let baseUrl = `${window.location.protocol}//${window.location.host}`;
+                        if (window.location.protocol === 'file:') baseUrl = window.location.href.replace(/admin\.html.*$/, '');
+                        const roomUrl = baseUrl.startsWith('file:') ? `consultoria/index.html?room=${room}&role=admin` : `${baseUrl}/consultoria/?room=${room}&role=admin`;
+
+                        div.innerHTML = `
+                            <div>
+                                <h3 style="margin:0; font-size:1.1rem; color:#0f172a;">Sala <span style="color:#0ea5e9;">${room}</span></h3>
+                                <p style="margin:4px 0 0 0; font-size:0.8rem; color:#64748b;"><i class="fas fa-clock"></i> Cliente esperando...</p>
+                            </div>
+                            <a href="${roomUrl}" target="_blank" class="btn-primary" style="background:#10b981; border:none; border-radius:6px; padding:0.5rem 1rem; color:white; text-decoration:none; font-weight:bold; font-size:0.9rem;">
+                                Unirse
+                            </a>
+                        `;
+                        list.appendChild(div);
+                    });
+                }
+            } catch (err) { }
+        }
+
+        window.openVideocallsModal = function() {
+            document.getElementById('videoRoomsOverlay').style.display = 'flex';
+            fetchActiveRooms();
+        };
+
+        if (sessionStorage.getItem('isAdmin') === 'true') {
+            setInterval(fetchActiveRooms, 5000);
+            setTimeout(fetchActiveRooms, 1000);
+        }
+    </script>
+
     <script src="js/app.js?v=V7_DEBUG"></script>
 </body>
 

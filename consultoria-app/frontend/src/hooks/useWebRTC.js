@@ -57,81 +57,98 @@ export default function useWebRTC(socket, roomId) {
 
     let isMounted = true;
 
+    const onExistingPeers = (users) => {
+      users.forEach(userId => {
+        const pc = createPC(userId);
+        pc.createOffer()
+          .then(offer => pc.setLocalDescription(offer))
+          .then(() => {
+            socket.emit('offer', {
+              target: userId,
+              caller: socket.id,
+              sdp: pc.localDescription
+            });
+          })
+          .catch(err => console.error('Error creating offer:', err));
+      });
+    };
+
+    const onUserJoined = (userId) => {
+      // Create a peer connection for the user who just joined
+      createPC(userId);
+    };
+
+    const onOffer = (incoming) => {
+      const pc = createPC(incoming.caller);
+      pc.setRemoteDescription(new RTCSessionDescription(incoming.sdp))
+        .then(() => pc.createAnswer())
+        .then(answer => pc.setLocalDescription(answer))
+        .then(() => {
+          socket.emit('answer', {
+            target: incoming.caller,
+            caller: socket.id,
+            sdp: pc.localDescription
+          });
+        })
+        .catch(err => console.error('Error handling offer:', err));
+    };
+
+    const onAnswer = (incoming) => {
+      // Backend emits { callee: socket.id, sdp }
+      const remoteId = incoming.caller || incoming.callee;
+      const pc = pcs.current[remoteId];
+      if (pc) {
+        pc.setRemoteDescription(new RTCSessionDescription(incoming.sdp))
+          .catch(err => console.error('Error setting remote desc in answer:', err));
+      }
+    };
+
+    const onIce = (incoming) => {
+      const pc = pcs.current[incoming.sender];
+      if (pc && incoming.candidate) {
+        pc.addIceCandidate(new RTCIceCandidate(incoming.candidate))
+          .catch(err => console.error('Error adding ICE candidate:', err));
+      }
+    };
+
+    const onUserLeft = (userId) => {
+      if (pcs.current[userId]) {
+        pcs.current[userId].close();
+        delete pcs.current[userId];
+        setRemoteStream(null);
+        
+        // El usuario remoto se desconectó, redirigimos al inicio
+        window.location.href = '/index.html';
+      }
+    };
+
     const init = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (!isMounted) { stream.getTracks().forEach(t => t.stop()); return; }
         localStreamRef.current = stream;
         setLocalStream(stream);
+
+        // ONLY register listeners AFTER local stream is ready
+        socket.on('existing-peers', onExistingPeers);
+        socket.on('user-joined',    onUserJoined);
+        socket.on('offer',          onOffer);
+        socket.on('answer',         onAnswer);
+        socket.on('ice-candidate',  onIce);
+        socket.on('user-left',      onUserLeft);
+
       } catch (err) {
         console.warn('Cámara/micrófono no disponible:', err.message);
+        socket.on('existing-peers', onExistingPeers);
+        socket.on('user-joined',    onUserJoined);
+        socket.on('offer',          onOffer);
+        socket.on('answer',         onAnswer);
+        socket.on('ice-candidate',  onIce);
+        socket.on('user-left',      onUserLeft);
       }
     };
 
     init();
-
-    // ── Someone who was already in the room tells us they exist ──
-    const onExistingPeers = async (peerIds) => {
-      for (const peerId of peerIds) {
-        const pc = createPC(peerId);
-        try {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          socket.emit('offer', { target: peerId, sdp: offer });
-        } catch (e) { console.error('offer error', e); }
-      }
-    };
-
-    // ── A new user just joined our room ──
-    const onUserJoined = async (newPeerId) => {
-      // We'll wait for their offer; they will send it via existing-peers
-      createPC(newPeerId);
-    };
-
-    // ── Receive offer → send answer ──
-    const onOffer = async ({ caller, sdp }) => {
-      const pc = createPC(caller);
-      try {
-        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket.emit('answer', { target: caller, sdp: answer });
-      } catch (e) { console.error('answer error', e); }
-    };
-
-    // ── Receive answer ──
-    const onAnswer = async ({ callee, sdp }) => {
-      const pc = pcs.current[callee];
-      if (pc) {
-        try { await pc.setRemoteDescription(new RTCSessionDescription(sdp)); }
-        catch (e) { console.error('set answer error', e); }
-      }
-    };
-
-    // ── Receive ICE candidate ──
-    const onIce = async ({ sender, candidate }) => {
-      const pc = pcs.current[sender];
-      if (pc) {
-        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); }
-        catch (e) { /* ignore benign errors */ }
-      }
-    };
-
-    // ── Peer left ──
-    const onUserLeft = (peerId) => {
-      if (pcs.current[peerId]) {
-        pcs.current[peerId].close();
-        delete pcs.current[peerId];
-      }
-      setRemoteStream(null);
-    };
-
-    socket.on('existing-peers', onExistingPeers);
-    socket.on('user-joined',    onUserJoined);
-    socket.on('offer',          onOffer);
-    socket.on('answer',         onAnswer);
-    socket.on('ice-candidate',  onIce);
-    socket.on('user-left',      onUserLeft);
 
     return () => {
       isMounted = false;

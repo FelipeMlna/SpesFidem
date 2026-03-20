@@ -18,6 +18,7 @@ function App() {
   const [socket,     setSocket]     = useState(null);
   const [roomId,     setRoomId]     = useState('');
   const [inputRoom,  setInputRoom]  = useState('');
+  const [role,       setRole]       = useState('client'); // 'client' or 'admin'
   const [joined,     setJoined]     = useState(false);
   const [specs,      setSpecs]      = useState(INITIAL_SPECS);
   const [copied,     setCopied]     = useState(false);
@@ -39,20 +40,48 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const roomFromUrl = params.get('room');
+    const roleFromUrl = params.get('role');
+    
+    if (roleFromUrl) setRole(roleFromUrl);
+
     if (roomFromUrl && socket && !joined) {
       const id = roomFromUrl.toUpperCase();
       setRoomId(id);
       socket.emit('join-room', id);
       setJoined(true);
+
+      // Auto-trigger WhatsApp if coming from videocall.html redirect
+      if (params.get('autoWa') === 'true') {
+        const phone = '573046291152';
+        const cleanUrl = window.location.href.split('&autoWa')[0];
+        const waMessage = `Nueva solicitud de consultoría Spesfidem, cliente esperando\n\nSala: ${id}\nEnlace Principal: ${cleanUrl}`;
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(waMessage)}`;
+        
+        // Limpiamos la URL para evitar loop y que el Back no rebote
+        const urlObj = new URL(window.location);
+        urlObj.searchParams.delete('autoWa');
+        window.history.replaceState({}, '', urlObj);
+
+        // Abrimos WA con un ligero retraso para asegurar que React haya pintado la sala WebRTC
+        setTimeout(() => {
+          let win = window.open(waUrl, '_blank');
+          if (!win) window.location.href = waUrl;
+        }, 500);
+      }
     }
   }, [socket, joined]);
 
   // ── Create room (client) ──
   const createRoom = () => {
-    const id = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const id = inputRoom.trim().toUpperCase() || Math.random().toString(36).substring(2, 8).toUpperCase();
     setRoomId(id);
     if (socket) socket.emit('join-room', id);
     setJoined(true);
+    
+    // Evitar que el historial se pierda si la app se minimiza
+    const url = new URL(window.location);
+    url.searchParams.set('room', id);
+    window.history.replaceState({}, '', url);
     
     // Auto-generate WhatsApp notification to the admin (573046291152)
     const roomUrl = `${window.location.protocol}//${window.location.host}/consultoria/?room=${id}`;
@@ -61,8 +90,10 @@ function App() {
     const waMessage = `Nueva solicitud de consultoría Spesfidem, cliente esperando\n\nSala: ${id}\nEnlace Principal: ${roomUrl}\nEnlace Alterno: ${fallbackUrl}`;
     const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(waMessage)}`;
     
-    // Open WhatsApp in a new tab
-    window.open(waUrl, '_blank');
+    // Open WhatsApp in a new tab smoothly
+    setTimeout(() => {
+      window.open(waUrl, '_blank');
+    }, 300);
   };
 
   // ── Join existing room ──
@@ -174,12 +205,12 @@ function App() {
       </header>
 
       {/* Main Grid */}
-      <main className="flex-1 grid grid-cols-12 gap-3 h-full min-h-0">
+      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-3 h-full min-h-0 overflow-y-auto lg:overflow-hidden pb-4 lg:pb-0">
 
         {/* Left: Video + Visualizer */}
-        <div className="col-span-4 flex flex-col gap-3 h-full min-h-0">
+        <div className="lg:col-span-4 flex flex-col gap-3 h-[80vh] lg:h-full shrink-0 lg:shrink min-h-0">
           <div className="flex-1 min-h-0 rounded-2xl overflow-hidden">
-            <VideoCall socket={socket} roomId={roomId} />
+            <VideoCall socket={socket} roomId={roomId} role={role} />
           </div>
           <div className="h-[38%] shrink-0">
             <Visualizer specs={specs} />
@@ -187,12 +218,12 @@ function App() {
         </div>
 
         {/* Center: Workspace */}
-        <div className="col-span-4 h-full min-h-0">
+        <div className="lg:col-span-4 h-auto lg:h-full shrink-0 min-h-0">
           <Workspace specs={specs} onChange={handleSpecChange} />
         </div>
 
         {/* Right: Gallery */}
-        <div className="col-span-4 h-full min-h-0">
+        <div className="lg:col-span-4 h-[60vh] lg:h-full shrink-0 min-h-0">
           <Gallery socket={socket} roomId={roomId} />
         </div>
 

@@ -1,8 +1,8 @@
 import useWebRTC from '../hooks/useWebRTC';
-import { Camera, CameraOff, Mic, MicOff } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, PhoneOff } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
 
-export default function VideoCall({ socket, roomId }) {
+export default function VideoCall({ socket, roomId, role = 'client' }) {
   const { localStream, remoteStream, toggleCamera, toggleMic, cameraActive, micActive } = useWebRTC(socket, roomId);
   const localVideoRef  = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -19,6 +19,10 @@ export default function VideoCall({ socket, roomId }) {
     }
   }, [remoteStream]);
 
+  const endCall = () => {
+    window.location.href = '/index.html';
+  };
+
   return (
     <div className="flex flex-col gap-2 h-full">
       {/* Remote Video — full size */}
@@ -30,7 +34,9 @@ export default function VideoCall({ socket, roomId }) {
             <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
               <i className="fas fa-user text-accent text-2xl"></i>
             </div>
-            <p className="text-sm">Esperando al asesor...</p>
+            <p className="text-sm">
+              {role === 'admin' ? 'Esperando al cliente...' : 'Esperando al asesor...'}
+            </p>
             <p className="text-xs opacity-50">La llamada iniciará al conectarse</p>
           </div>
         )}
@@ -48,14 +54,20 @@ export default function VideoCall({ socket, roomId }) {
         {/* Controls */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3 bg-slate-900/80 px-5 py-2.5 rounded-full backdrop-blur-md border border-white/10">
           <button onClick={toggleMic}
-            className={`p-2.5 rounded-full transition-all ${micActive ? 'bg-white/10 hover:bg-white/20' : 'bg-red-500/90 hover:bg-red-500'}`}
+            className={`p-2.5 rounded-full transition-all ${micActive ? 'bg-white/10 hover:bg-white/20' : 'bg-orange-500/90 hover:bg-orange-500 text-white'}`}
             title={micActive ? 'Silenciar' : 'Activar micrófono'}>
             {micActive ? <Mic size={18} /> : <MicOff size={18} />}
           </button>
           <button onClick={toggleCamera}
-            className={`p-2.5 rounded-full transition-all ${cameraActive ? 'bg-white/10 hover:bg-white/20' : 'bg-red-500/90 hover:bg-red-500'}`}
+            className={`p-2.5 rounded-full transition-all ${cameraActive ? 'bg-white/10 hover:bg-white/20' : 'bg-orange-500/90 hover:bg-orange-500 text-white'}`}
             title={cameraActive ? 'Apagar cámara' : 'Activar cámara'}>
             {cameraActive ? <Camera size={18} /> : <CameraOff size={18} />}
+          </button>
+          {/* Botón de Colgar */}
+          <button onClick={endCall}
+            className="p-2.5 rounded-full transition-all bg-red-600/90 hover:bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)] flex items-center justify-center text-white ml-2"
+            title="Finalizar Videollamada">
+            <PhoneOff size={18} />
           </button>
         </div>
       </div>

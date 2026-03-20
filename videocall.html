@@ -260,8 +260,11 @@
             }
             .mirror-option {
                 padding: 0.6rem 0.7rem;
-                font-size: 0.78rem;
+                font-size: 0.75rem;
                 gap: 6px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             .action-row {
                 flex-direction: column;
@@ -363,6 +366,9 @@
             .lightbox-title {
                 font-size: 0.9rem;
                 bottom: 15px;
+            }
+            .mirror-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -1028,27 +1034,11 @@
                 const standaloneUrl = baseUrl.startsWith('file:') ? 'consulta.html' : (baseUrl + '/consulta.html');
                 const fallbackUrl = `${standaloneUrl}?room=${roomId}`;
                 
-                const finalUrl = viteUrl;
+                const finalUrl = `${viteUrl}&autoWa=true`;
                 currentRoomUrlGlobal = finalUrl;
 
-                // 3. Generar mensaje de WhatsApp
-                const phone = '573046291152';
-                const waMessage = `Nueva solicitud de consultoría Spesfidem, cliente esperando\nSala: ${roomId}\nEnlace Principal: ${viteUrl}\nEnlace Alterno: ${fallbackUrl}`;
-                const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(waMessage)}`;
-
-                // 4. Actualizar estado del Modal
-                document.getElementById('modalRoomId').textContent = roomId;
-                document.getElementById('btnEntrarSala').href = viteUrl;
-                document.getElementById('btnWaModal').href = waUrl;
-                
-                // 5. Intento Automático de Apertura
-                let win = window.open(waUrl, '_blank');
-
-                if (!win) {
-                    showToast('Pop-up bloqueado. Usa el botón "Enviar por WhatsApp"');
-                }
-
-                document.getElementById('modalConsultoria').style.display = 'flex';
+                // 3. Redirección inmediata (El WA se abrirá en la sala gracias a autoWa=true)
+                window.location.replace(finalUrl);
 
             } catch (error) {
                 console.error('[Spesfidem] ❌ Error:', error);
