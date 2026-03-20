@@ -1,9 +1,9 @@
 import useWebRTC from '../hooks/useWebRTC';
-import { Camera, CameraOff, Mic, MicOff, PhoneOff } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, PhoneOff, RefreshCw } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
 
 export default function VideoCall({ socket, roomId, role = 'client' }) {
-  const { localStream, remoteStream, toggleCamera, toggleMic, cameraActive, micActive } = useWebRTC(socket, roomId);
+  const { localStream, remoteStream, toggleCamera, toggleMic, cameraActive, micActive, switchCamera } = useWebRTC(socket, roomId);
   const localVideoRef  = useRef(null);
   const remoteVideoRef = useRef(null);
 
@@ -62,6 +62,12 @@ export default function VideoCall({ socket, roomId, role = 'client' }) {
             className={`p-2.5 rounded-full transition-all ${cameraActive ? 'bg-white/10 hover:bg-white/20' : 'bg-orange-500/90 hover:bg-orange-500 text-white'}`}
             title={cameraActive ? 'Apagar cámara' : 'Activar cámara'}>
             {cameraActive ? <Camera size={18} /> : <CameraOff size={18} />}
+          </button>
+          
+          <button onClick={switchCamera}
+            className="p-2.5 rounded-full transition-all bg-white/10 hover:bg-white/20 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]"
+            title="Voltear Cámara (Frontal/Trasera)">
+            <RefreshCw size={18} />
           </button>
           {/* Botón de Colgar */}
           <button onClick={endCall}

@@ -13,6 +13,7 @@ export default function useWebRTC(socket, roomId) {
   const [remoteStream, setRemoteStream] = useState(null);
   const [cameraActive, setCameraActive] = useState(true);
   const [micActive, setMicActive]       = useState(true);
+  const [facingMode, setFacingMode]     = useState('user');
 
   // peerConnections keyed by remote socket ID
   const pcs = useRef({});
@@ -124,7 +125,7 @@ export default function useWebRTC(socket, roomId) {
 
     const init = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
         if (!isMounted) { stream.getTracks().forEach(t => t.stop()); return; }
         localStreamRef.current = stream;
         setLocalStream(stream);
@@ -182,5 +183,37 @@ export default function useWebRTC(socket, roomId) {
     if (track) { track.enabled = !track.enabled; setMicActive(track.enabled); }
   };
 
-  return { localStream, remoteStream, toggleCamera, toggleMic, cameraActive, micActive };
+  const switchCamera = async () => {
+    try {
+      const newMode = facingMode === 'user' ? 'environment' : 'user';
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newMode },
+        audio: false
+      });
+      
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+      
+      if (oldVideoTrack) oldVideoTrack.stop();
+      
+      if (localStreamRef.current && oldVideoTrack) {
+        localStreamRef.current.removeTrack(oldVideoTrack);
+        localStreamRef.current.addTrack(newVideoTrack);
+        // Force state update to re-attach srcObject in component
+        setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+      }
+      
+      setFacingMode(newMode);
+      setCameraActive(true);
+      
+      Object.values(pcs.current).forEach(pc => {
+        const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender) sender.replaceTrack(newVideoTrack).catch(err => console.error('Error replacing track', err));
+      });
+    } catch (err) {
+      console.warn('Error cambiando cámara:', err.message);
+    }
+  };
+
+  return { localStream, remoteStream, toggleCamera, toggleMic, cameraActive, micActive, switchCamera };
 }
