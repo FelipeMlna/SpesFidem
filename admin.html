@@ -769,7 +769,9 @@
     <script>
         async function fetchActiveRooms() {
             try {
-                const WEBRTC_URL = 'https://spesfidem-video-server.onrender.com';
+                const hostname = window.location.hostname || 'localhost';
+                const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+                const WEBRTC_URL = isLocal ? 'http://localhost:3001' : 'https://spesfidem-video-server.onrender.com';
                 
                 const response = await fetch(`${WEBRTC_URL}/api/rooms`);
                 if (!response.ok) throw new Error('Network error');
