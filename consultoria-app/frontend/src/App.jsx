@@ -194,7 +194,7 @@ function App() {
             <i className="fas fa-video text-accent text-sm"></i>
           </div>
           <div>
-            <h1 className="font-['Outfit'] font-bold text-base leading-tight">Consultoría Spesfidem</h1>
+            <h1 className="font-['Outfit'] font-bold text-base leading-tight">Consultoría Spesfidem ★</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="flex h-1.5 w-1.5 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
