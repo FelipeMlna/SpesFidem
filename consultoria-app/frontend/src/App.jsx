@@ -3,7 +3,6 @@ import { io } from 'socket.io-client';
 import VideoCall from './components/VideoCall';
 import Workspace from './components/Workspace';
 import Visualizer from './components/Visualizer';
-import Gallery from './components/Gallery';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://spesfidem-video-server.onrender.com';
 
@@ -31,6 +30,14 @@ function App() {
   useEffect(() => {
     const s = io(BACKEND_URL, { transports: ['websocket', 'polling'] });
     setSocket(s);
+
+    s.on('connect', () => {
+      // Re-join automatically if socket drops and reconnects natively
+      const currentRoomId = new URLSearchParams(window.location.search).get('room');
+      if (currentRoomId) {
+        s.emit('join-room', currentRoomId.toUpperCase());
+      }
+    });
 
     s.on('state-updated', ({ key, value }) => {
       if (key === 'FULL_SYNC') {
@@ -85,10 +92,12 @@ function App() {
     setRoomId(id);
     if (socket) socket.emit('join-room', id);
     setJoined(true);
+    setRole('client');
 
-    // Guardar sala en URL para persistencia
+    // Guardar sala y rol en URL para persistencia total
     const url = new URL(window.location);
     url.searchParams.set('room', id);
+    url.searchParams.set('role', 'client');
     window.history.replaceState({}, '', url);
   };
 
@@ -100,6 +109,12 @@ function App() {
     setRoomId(id);
     if (socket) socket.emit('join-room', id);
     setJoined(true);
+
+    // Guardar sala y rol en URL para reconexiones en caso de F5
+    const url = new URL(window.location);
+    url.searchParams.set('room', id);
+    url.searchParams.set('role', selectedRole);
+    window.history.replaceState({}, '', url);
   };
 
   // ── Shared spec change ──
@@ -209,9 +224,9 @@ function App() {
       {/* Main Grid */}
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-3 h-full min-h-0 overflow-y-auto lg:overflow-hidden p-3 lg:p-0">
 
-        {/* Left: Video + Visualizer (Col-span 4) */}
-        <div className="lg:col-span-4 flex flex-col gap-4 lg:gap-3 h-auto lg:h-full min-h-[400px] lg:min-h-0">
-          <div className="flex-1 min-h-[300px] lg:min-h-0">
+        {/* Left: Video + Visualizer (Col-span 8) */}
+        <div className="lg:col-span-8 flex flex-col gap-4 lg:gap-3 h-auto lg:h-full min-h-[500px] lg:min-h-0">
+          <div className="flex-1 min-h-[400px] lg:min-h-0">
             <VideoCall socket={socket} roomId={roomId} role={role} />
           </div>
           <div className="h-[280px] lg:h-[220px] shrink-0">
@@ -219,14 +234,9 @@ function App() {
           </div>
         </div>
 
-        {/* Center: Workspace (Col-span 4) */}
-        <div className="lg:col-span-4 h-auto lg:h-full min-h-[500px] lg:min-h-0">
+        {/* Right: Workspace (Col-span 4) */}
+        <div className="lg:col-span-4 h-auto lg:h-full min-h-[500px] lg:min-h-0 pb-6 lg:pb-0">
           <Workspace specs={specs} onChange={handleSpecChange} />
-        </div>
-
-        {/* Right: Gallery (Col-span 4) */}
-        <div className="lg:col-span-4 h-auto lg:h-full min-h-[400px] lg:min-h-0 pb-6 lg:pb-0">
-          <Gallery socket={socket} roomId={roomId} />
         </div>
 
       </main>
