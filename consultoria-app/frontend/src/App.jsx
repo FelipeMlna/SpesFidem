@@ -194,7 +194,7 @@ function App() {
             <i className="fas fa-video text-accent text-sm"></i>
           </div>
           <div>
-            <h1 className="font-['Outfit'] font-bold text-base leading-tight">Consultoría Spesfidem ★</h1>
+            <h1 className="font-['Outfit'] font-bold text-base leading-tight">Consultoría Spesfidem</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="flex h-1.5 w-1.5 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
@@ -226,19 +226,19 @@ function App() {
       {/* Main Grid */}
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-3 h-full min-h-0 overflow-y-auto lg:overflow-hidden p-3 lg:p-0">
 
-        {/* Left: Video + Visualizer (Col-span 8) */}
-        <div className="lg:col-span-8 flex flex-col gap-4 lg:gap-3 h-auto lg:h-full min-h-[500px] lg:min-h-0">
-          <div className="flex-1 min-h-[400px] lg:min-h-0">
-            <VideoCall socket={socket} roomId={roomId} role={role} />
-          </div>
-          <div className="h-[280px] lg:h-[220px] shrink-0">
-            <Visualizer specs={specs} />
-          </div>
+        {/* Left: Video full height (Col-span 8) */}
+        <div className="lg:col-span-8 h-auto lg:h-full min-h-[500px] lg:min-h-0">
+          <VideoCall socket={socket} roomId={roomId} role={role} />
         </div>
 
-        {/* Right: Workspace (Col-span 4) */}
-        <div className="lg:col-span-4 h-auto lg:h-full min-h-[500px] lg:min-h-0 pb-6 lg:pb-0">
-          <Workspace specs={specs} onChange={handleSpecChange} />
+        {/* Right: Workspace + Visualizer (Col-span 4) */}
+        <div className="lg:col-span-4 flex flex-col gap-3 h-auto lg:h-full min-h-[500px] lg:min-h-0 pb-6 lg:pb-0">
+          <div className="flex-1 min-h-0">
+            <Workspace specs={specs} onChange={handleSpecChange} />
+          </div>
+          <div className="h-[200px] shrink-0">
+            <Visualizer specs={specs} />
+          </div>
         </div>
 
       </main>
