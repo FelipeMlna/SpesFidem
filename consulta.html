@@ -87,7 +87,7 @@
     }
     @media (min-width: 1024px) {
       #room { 
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         height: calc(100vh - 70px);
         overflow: hidden;
       }
@@ -245,26 +245,14 @@
       </div>
     </div>
 
-    <!-- PANEL 3: Galería -->
-    <div class="glass-card" style="overflow-y: auto;">
-      <h2 class="panel-title"><i class="fas fa-images"></i> Diseño Sugerido</h2>
-      <div class="gallery-grid" id="galleryGrid">
-        <!-- Renderizado vía JS -->
-      </div>
-    </div>
+
   </div>
 
   <script>
     const SERVER = 'https://spesfidem-video-server.onrender.com';
-    const DESIGNS = [
-      { id: 'd1', title: 'Puerta Baño Corrediza', img: 'https://images.unsplash.com/photo-1600566753086-00f18efc2291?auto=format&fit=crop&q=80&w=600' },
-      { id: 'd2', title: 'Ventana Panorámica', img: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&q=80&w=600' },
-      { id: 'd3', title: 'Espejo LED Flotante', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600' },
-      { id: 'd4', title: 'División Oficina', img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600' }
-    ];
 
     let socket, localStream, roomId, pc, facing = 'user';
-    let state = { width: 1.2, height: 1.5, leafCount: '2', profile: 'Natural', glass: 'Templado', selected_design: null };
+    let state = { width: 1.2, height: 1.5, leafCount: '2', profile: 'Natural', glass: 'Templado' };
 
     // ── SOCKET & WEBRTC ──
     function initSocket() {
@@ -298,7 +286,6 @@
 
       initSocket();
       socket.emit('join-room', roomId);
-      renderGallery();
       updateUI();
     }
 
@@ -350,19 +337,6 @@
       const scale = Math.min(150 / state.width, 150 / state.height, 60);
       viz.style.width = (state.width * scale) + "px";
       viz.style.height = (state.height * scale) + "px";
-
-      // Render gallery active state
-      renderGallery();
-    }
-
-    function renderGallery() {
-      const grid = document.getElementById('galleryGrid');
-      grid.innerHTML = DESIGNS.map(d => `
-        <div class="gallery-item ${state.selected_design === d.id ? 'active' : ''}" onclick="sync('selected_design', '${d.id}')">
-          <img src="${d.img}">
-          <div class="gallery-label">${d.title}</div>
-        </div>
-      `).join('');
     }
 
     // ── VIDEO CONTROLS ──
