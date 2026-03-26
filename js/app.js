@@ -27,18 +27,17 @@ class ClientDB {
         const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
         const isFile = window.location.protocol === 'file:';
 
-        if (isFile) {
+        if (isLocal || isFile) {
             base = 'http://localhost:3000';
-        } else if (port === '3000') {
-            base = '';
         } else {
-            base = `http://${hostname}:3000`;
+            // PRODUCCIÓN: URL de Render para el Backend de Base de Datos (Python)
+            base = 'https://spesfidem-crm-server.onrender.com';
         }
 
-        this.apiUrl = base ? `${base}/api/clients` : '/api/clients';
-        this.loginUrl = base ? `${base}/api/login` : '/api/login';
+        this.apiUrl = `${base}/api/clients`;
+        this.loginUrl = `${base}/api/login`;
         this._retried = false;
-        console.log(`ClientDB: Connection Layer - Using Base: ${base || 'RELATIVE'} (Target: ${this.apiUrl})`);
+        console.log(`ClientDB: Connection Layer - Using Base: ${base} (Target: ${this.apiUrl})`);
     }
 
     // Initialization is simple health check or no-op

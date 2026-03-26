@@ -11,3 +11,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+  - type: web
+    name: spesfidem-crm-server
+    env: python
+    rootDir: .
+    buildCommand: ""
+    startCommand: python server.py
+    plan: free
+    repo: https://github.com/espinosagarciajhonedinson-droid/spesfidem_aluminio
+    branch: master
