@@ -747,7 +747,7 @@
                 
                 // 3. Notificación WhatsApp (Discreta, abre en nueva pestaña)
                 const phone = "573046291152";
-                const message = encodeURIComponent(`🚀 *Nueva solicitud de consultoría Spesfidem*\n\nHola, un cliente está esperando en la sala virtual.\n\n*Sala:* ${roomId}\n*Enlace:* ${baseUrl}/consultoria/?room=${roomId}`);
+                const message = encodeURIComponent(`🚀 *Nueva solicitud de consultoría Spesfidem*\n\nHola, un cliente está esperando en la sala virtual.\n\n*Sala:* ${roomId}\n\n*Enlace para ingresar (Asesor):*\n${baseUrl}/consultoria/?room=${roomId}&role=admin`);
                 const waUrl = `https://wa.me/${phone}?text=${message}`;
                 
                 console.log('[Spesfidem] 📱 Notificando asesor via WhatsApp...');

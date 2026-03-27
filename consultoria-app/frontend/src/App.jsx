@@ -226,7 +226,7 @@ function App() {
               onClick={() => {
                 const phone = "573046291152";
                 const baseUrl = `${window.location.protocol}//${window.location.host}`;
-                const message = encodeURIComponent(`🚀 *Consulta Spesfidem*\n\nHola, estoy en la sala virtual y necesito asesoría.\n\n*Sala:* ${roomId}\n*Enlace:* ${baseUrl}/consultoria/?room=${roomId}`);
+                const message = encodeURIComponent(`🚀 *Consulta Spesfidem*\n\nHola, estoy en la sala virtual y necesito asesoría.\n\n*Sala:* ${roomId}\n\n*Enlace para ingresar (Asesor):*\n${baseUrl}/consultoria/?room=${roomId}&role=admin`);
                 window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
               }}
               className="bg-success/15 hover:bg-success/25 text-success px-3 py-1.5 rounded-full text-[11px] font-bold border border-success/30 flex items-center gap-1.5 transition-all animate-pulse"
