@@ -2,38 +2,25 @@
   "installCommand": "echo 'Install handled by build script'",
   "buildCommand": "chmod +x build_vercel.sh && sh build_vercel.sh",
   "outputDirectory": "vercel_dist",
-  "cleanUrls": false,
-  "rewrites": [
+  "routes": [
     {
-      "source": "/consultoria",
-      "destination": "/consultoria/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/consultoria/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
-      ]
+      "src": "^/consultoria/assets/(.*)",
+      "dest": "/consultoria/assets/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=604800, immutable"
+      }
     },
     {
-      "source": "/images/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
-      ]
+      "src": "^/consultoria/(.*)",
+      "dest": "/consultoria/index.html"
     },
     {
-      "source": "/css/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400" }
-      ]
+      "src": "^/$",
+      "dest": "/index.html"
     },
     {
-      "source": "/js/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400" }
-      ]
+      "src": "^/(.*)",
+      "dest": "/$1"
     }
   ]
 }
