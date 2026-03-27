@@ -2,29 +2,26 @@
   "installCommand": "echo 'Install handled by build script'",
   "buildCommand": "chmod +x build_vercel.sh && sh build_vercel.sh",
   "outputDirectory": "vercel_dist",
-  "routes": [
+  "cleanUrls": false,
+  "trailingSlash": true,
+  "headers": [
     {
-      "src": "^/consultoria/assets/(.*)",
-      "dest": "/consultoria/assets/$1",
-      "headers": {
-        "Cache-Control": "public, max-age=604800, immutable"
-      }
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
     },
     {
-      "src": "^/consultoria/(.*)",
-      "dest": "/consultoria/index.html"
+      "source": "/consultoria/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
     },
     {
-      "src": "^/consultoria$",
-      "dest": "/consultoria/index.html"
-    },
-    {
-      "src": "^/$",
-      "dest": "/index.html"
-    },
-    {
-      "src": "^/(.*)",
-      "dest": "/$1"
+      "source": "/(.*)\\.(js|css|webp|png|jpg|jpeg|svg|woff2)$",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
+      ]
     }
   ]
 }
