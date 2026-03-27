@@ -20,7 +20,8 @@ export default function VideoCall({ socket, roomId, role = 'client' }) {
   }, [remoteStream]);
 
   const endCall = () => {
-    window.location.href = '/index.html';
+    // Navigate back to root landing page, works on any domain
+    window.location.href = window.location.origin + '/';
   };
 
   return (

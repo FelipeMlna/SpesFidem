@@ -3,6 +3,7 @@ node_modules/
 dist/
 build/
 .cache/
+vercel_dist/
 
 # === Environment Variables (NEVER commit) ===
 .env
