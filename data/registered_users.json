@@ -1,0 +1,16 @@
+[
+    {
+        "id": "usr_1787947444897",
+        "fullName": "Andrés Felipe",
+        "email": "andres@spesfidem.com",
+        "idCard": "1098765432",
+        "cellphone": "3001234567",
+        "city": "Ibagué",
+        "address": "Carrera 5 # 42-10",
+        "passwordHash": "39bdc56fe89cbe6fea001abb7c0d7d0cc0598a823779b8bb90900045d44bdd147641ba8fef34182c5994561198f7f53a6f9abe4fc40faa49c2f5a88a9a5d98b0",
+        "salt": "b3a467828e961a6e201b3d2e0c2f13b0",
+        "registrationDate": "28/8/2026 03:04 p. m.",
+        "status": "Activo",
+        "role": "user"
+    }
+]

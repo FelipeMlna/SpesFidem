@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Producto | Spesfidem Aluminio</title>
+    <link rel="stylesheet" href="css/style.css?v=162">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #020617;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .viewer-header {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn {
+            color: #f1f5f9;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            background: var(--accent);
+            color: #020617;
+        }
+
+        .viewer-main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+        }
+
+        .viewer-main:active {
+            cursor: grabbing;
+        }
+
+        #viewport-img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            transition: transform 0.1s ease-out;
+            transform-origin: center center;
+            will-change: transform;
+        }
+
+        .viewer-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent);
+        }
+
+        .zoom-label {
+            position: absolute;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--accent);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            letter-spacing: 2px;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            font-size: 0.9rem;
+        }
+
+        .loading-ring {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            position: absolute;
+        }
+
+        .loading-ring:after {
+            content: " ";
+            display: block;
+            width: 64px;
+            height: 64px;
+            margin: 8px;
+            border-radius: 50%;
+            border: 6px solid #38bdf8;
+            border-color: #38bdf8 transparent #38bdf8 transparent;
+            animation: ring 1.2s linear infinite;
+        }
+
+        @keyframes ring {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Navigation Arrows */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(15, 23, 42, 0.4);
+            border: none;
+            color: white;
+            padding: 2.5rem 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 101;
+            transition: 0.3s;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-arrow:hover {
+            background: rgba(38, 189, 248, 0.3);
+            color: var(--accent);
+            padding: 2.5rem 1.5rem;
+        }
+
+        .nav-arrow.prev {
+            left: 20px;
+        }
+
+        .nav-arrow.next {
+            right: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-arrow {
+                padding: 1.5rem 0.8rem;
+                font-size: 1.5rem;
+            }
+
+            .nav-arrow.prev {
+                left: 10px;
+            }
+
+            .nav-arrow.next {
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="viewer-header">
+        <a href="#" id="backBtn" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Volver al Catálogo
+        </a>
+        <div style="color: #cbd5e1; font-family: 'Outfit', sans-serif; font-weight: 600;" id="pageTitle">
+            VISTA PREVIA DE PRODUCTO
+        </div>
+        <div style="width: 150px;"></div> <!-- Spacer -->
+    </header>
+
+    <main class="viewer-main" id="viewerMain">
+        <div class="zoom-label" id="zoomLabel">ZOOM: 100%</div>
+
+        <!-- Navigation Buttons -->
+        <button id="prevBtn" class="nav-arrow prev" onclick="navigate(-1)" title="Anterior">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button id="nextBtn" class="nav-arrow next" onclick="navigate(1)" title="Siguiente">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+
+        <img id="viewport-img" src="" alt="Cargando producto...">
+
+        <div class="viewer-controls">
+            <button class="control-btn" title="Anterior (Atajo: A)" onclick="navigate(-1)"><i
+                    class="fas fa-angle-left"></i></button>
+            <button class="control-btn" title="Alejar" onclick="adjustZoom(-0.25)"><i
+                    class="fas fa-search-minus"></i></button>
+            <button class="control-btn" title="Reiniciar" onclick="resetView()"><i class="fas fa-sync-alt"></i></button>
+            <button class="control-btn" title="Acercar" onclick="adjustZoom(0.25)"><i
+                    class="fas fa-search-plus"></i></button>
+            <button class="control-btn" title="Siguiente (Atajo: D)" onclick="navigate(1)"><i
+                    class="fas fa-angle-right"></i></button>
+        </div>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        let currentSrc = params.get('src');
+        const cat = params.get('cat');
+        const backBtn = document.getElementById('backBtn');
+        const img = document.getElementById('viewport-img');
+        const viewerMain = document.getElementById('viewerMain');
+        const zoomLabel = document.getElementById('zoomLabel');
+
+        // State
+        let scale = 1;
+        let transX = 0;
+        let transY = 0;
+        let isDragging = false;
+        let startX, startY;
+
+        const galleries = {
+            'ventana_corrediza': 5, 'ventana_proyectante': 103, 'ventana_casement': 20,
+            'ventana_batiente': 14, 'ventana_fija': 100, 'ventana_basculante': 100,
+            'puerta_principal': 232, 'puerta_patio': 100, 'puerta_plegable': 100,
+            'puerta_bano': 100, 'division_bano': 59, 'espejos': 0,
+            'espejos_decorativos': 50, 'division_acrilico': 0, 'ventana_abatible': 105,
+            'vidrio_templado': 103
+        };
+
+        let currentIdx = 1;
+        if (currentSrc) {
+            // Extract index from src path (e.g., ./images/gallery/category/15.jpg)
+            const match = currentSrc.match(/\/(\d+)\.(jpg|png)/);
+            if (match) currentIdx = parseInt(match[1]);
+        }
+
+        // Logic
+        function loadCurrentImage() {
+            if (!cat) return;
+            // Update UI
+            img.style.opacity = '0.3';
+
+            const newSrc = `./images/gallery/${cat}/${currentIdx}.jpg`;
+            const fallbackSrc = `./images/gallery/${cat}/${currentIdx}.png`;
+
+            const tempImg = new Image();
+            tempImg.src = newSrc;
+            tempImg.onload = () => { currentSrc = newSrc; img.src = newSrc; img.style.opacity = '1'; resetView(); };
+            tempImg.onerror = () => {
+                const tempPng = new Image();
+                tempPng.src = fallbackSrc;
+                tempPng.onload = () => { currentSrc = fallbackSrc; img.src = fallbackSrc; img.style.opacity = '1'; resetView(); };
+                tempPng.onerror = () => {
+                    // If neither exist, maybe loop or skip
+                    console.error("Image not found:", currentIdx);
+                };
+            };
+
+            // Update Page Title
+            const titleEl = document.getElementById('pageTitle');
+            if (titleEl) titleEl.textContent = `${cat.replace(/_/g, ' ').toUpperCase()} #${currentIdx}`;
+        }
+
+        function navigate(direction) {
+            const count = galleries[cat] || 0;
+            if (count === 0) return;
+
+            currentIdx += direction;
+
+            // Loop logic
+            if (currentIdx > count) currentIdx = 1;
+            if (currentIdx < 1) currentIdx = count;
+
+            loadCurrentImage();
+        }
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') navigate(-1);
+            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') navigate(1);
+            if (e.key === 'Escape') backBtn.click();
+        });
+
+        // Init
+        if (currentSrc) {
+            img.src = currentSrc;
+            const titleEl = document.getElementById('pageTitle');
+            if (titleEl) titleEl.textContent = `${cat ? cat.replace(/_/g, ' ').toUpperCase() : 'VISUALIZADOR'} #${currentIdx}`;
+        }
+
+        if (cat) {
+            backBtn.href = `gallery.html?category=${cat}`;
+        } else {
+            backBtn.href = 'index.html';
+        }
+
+        function adjustZoom(delta) {
+            const nextScale = scale + delta;
+            if (nextScale >= 0.25 && nextScale <= 6) {
+                scale = nextScale;
+                updateTransform();
+            }
+        }
+
+        function resetView() {
+            scale = 1;
+            transX = 0;
+            transY = 0;
+            updateTransform();
+        }
+
+        function updateTransform() {
+            img.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
+            zoomLabel.textContent = `ZOOM: ${Math.round(scale * 100)}%`;
+        }
+
+        // Mouse Wheel Zoom
+        viewerMain.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            adjustZoom(delta);
+        }, { passive: false });
+
+        // Panning Logic
+        viewerMain.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - transX;
+            startY = e.clientY - transY;
+            viewerMain.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            transX = e.clientX - startX;
+            transY = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            viewerMain.style.cursor = 'grab';
+        });
+
+        // Touch support
+        viewerMain.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].clientX - transX;
+                startY = e.touches[0].clientY - transY;
+            }
+        });
+
+        viewerMain.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length === 1) {
+                transX = e.touches[0].clientX - startX;
+                transY = e.touches[0].clientY - startY;
+                updateTransform();
+            }
+        });
+
+        viewerMain.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+    </script>
+</body>
+
+</html>

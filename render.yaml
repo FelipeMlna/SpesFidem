@@ -1,0 +1,27 @@
+services:
+  # === WebRTC / Socket.io Signaling Server ===
+  - type: web
+    name: spesfidem-video-server
+    env: node
+    rootDir: consultoria-app/backend
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    repo: https://github.com/FelipeMlna/SpesFidem
+    branch: main
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+
+  # === CRM Backend (Python) ===
+  - type: web
+    name: spesfidem-crm-server
+    env: python
+    rootDir: .
+    buildCommand: pip install flask flask-cors
+    startCommand: python server.py
+    plan: free
+    repo: https://github.com/FelipeMlna/SpesFidem
+    branch: main

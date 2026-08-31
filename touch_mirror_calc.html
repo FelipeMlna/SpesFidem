@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Espejo Touch - Spesfidem</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #020617;
+            color: white;
+            padding-top: 40px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .calc-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-back {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .header-back:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .checkbox-group:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .checkbox-group input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .result-box {
+            margin-top: 40px;
+            background: linear-gradient(135deg, rgba(202, 138, 4, 0.2) 0%, rgba(234, 179, 8, 0.05) 100%);
+            border: 1px solid var(--accent);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .total-label {
+            font-size: 1.1rem;
+            color: #ca8a04;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .total-val {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 10px 0;
+            color: white;
+        }
+
+        .breakdown {
+            margin-top: 20px;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+        }
+
+        .breakdown div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .btn-ws {
+            width: 100%;
+            padding: 15px;
+            background: #25d366;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn-ws:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calc-container">
+        <a href="admin.html" class="header-back"><i class="fas fa-arrow-left"></i> Volver a Panel Admin</a>
+
+        <h1>Calculadora Espejo Touch</h1>
+        <p class="subtitle">Herramienta de cotización rápida Spesfidem Elite</p>
+
+        <div class="form-grid">
+            <div class="input-group">
+                <label>Ancho (cm)</label>
+                <input type="number" id="ancho" placeholder="Ej: 80" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Alto (cm)</label>
+                <input type="number" id="alto" placeholder="Ej: 120" oninput="calculate()">
+            </div>
+            <div class="input-group" style="grid-column: span 2;">
+                <label>Tipo de Vidrio</label>
+                <select id="tipoEspejo" onchange="calculate()">
+                    <option value="80000">Espejo 4mm ($80.000 / m²)</option>
+                    <option value="40000">Espejo 3mm ($40.000 / m²)</option>
+                </select>
+            </div>
+
+            <label class="checkbox-group">
+                <input type="checkbox" id="tieneLed" onchange="calculate()">
+                <div>
+                    <strong>Luz LED Perimetral</strong>
+                    <div style="font-size:0.8rem; color:#64748b;">+$5.000 / metro lineal</div>
+                </div>
+            </label>
+
+            <label class="checkbox-group">
+                <input type="checkbox" id="tieneTouch" onchange="calculate()">
+                <div>
+                    <strong>Sensor Touch</strong>
+                    <div style="font-size:0.8rem; color:#64748b;">+$35.000 unidad</div>
+                </div>
+            </label>
+
+            <label class="checkbox-group" style="grid-column: span 2;">
+                <input type="checkbox" id="tieneFranjas" onchange="calculate()">
+                <div>
+                    <strong>Franjas (Arenado)</strong>
+                    <div style="font-size:0.8rem; color:#64748b;">+ $60.000 (Valor Fijo)</div>
+                </div>
+            </label>
+
+            <div class="input-group" style="grid-column: span 2;">
+                <label>Silicona (Cant. de tubos de $15.000)</label>
+                <input type="number" id="silicona" value="0" min="0" oninput="calculate()">
+            </div>
+
+            <label class="checkbox-group" style="grid-column: span 2;">
+                <input type="checkbox" id="tieneManoObra" onchange="calculate()">
+                <div>
+                    <strong>Instalación / Mano de Obra</strong>
+                    <div style="font-size:0.8rem; color:#64748b;">+ 70% sobre el valor base</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="result-box">
+            <div class="total-label">Inversión Estimada</div>
+            <div class="total-val" id="totalDisplay">$0</div>
+
+            <div class="breakdown" id="breakdown">
+                <div><span>Base Vidrio:</span> <span id="valVidrio">$0</span></div>
+                <div><span>LED Perímetro:</span> <span id="valLed">$0</span></div>
+                <div><span>Sensor Touch:</span> <span id="valTouch">$0</span></div>
+                <div><span>Franjas:</span> <span id="valFranjas">$0</span></div>
+                <div><span>Silicona:</span> <span id="valSilicona">$0</span></div>
+                <div
+                    style="color:white; font-weight:bold; border-top:1px solid rgba(255,255,255,0.05); padding-top:5px; margin-top:5px;">
+                    <span>Mano de Obra (70%):</span> <span id="valManoObra">$0</span>
+                </div>
+            </div>
+
+            <button class="btn-ws" onclick="shareWs()">
+                <i class="fab fa-whatsapp"></i> Compartir Cotización
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const width = parseFloat(document.getElementById('ancho').value) / 100 || 0;
+            const height = parseFloat(document.getElementById('alto').value) / 100 || 0;
+            const priceM2 = parseFloat(document.getElementById('tipoEspejo').value);
+            const hasLed = document.getElementById('tieneLed').checked;
+            const hasTouch = document.getElementById('tieneTouch').checked;
+            const hasFranjas = document.getElementById('tieneFranjas').checked;
+            const siliconaQty = parseInt(document.getElementById('silicona').value) || 0;
+            const hasManoObra = document.getElementById('tieneManoObra').checked;
+
+            const area = width * height;
+            const perimeter = (width + height) * 2;
+
+            const costVidrio = area * priceM2;
+            const costLed = hasLed ? (perimeter * 5000) : 0;
+            const costTouch = hasTouch ? 35000 : 0;
+            const costFranjas = hasFranjas ? 60000 : 0;
+            const costSilicona = siliconaQty * 15000;
+
+            const subtotalMateriales = costVidrio + costLed + costTouch + costFranjas + costSilicona;
+            const costManoObra = hasManoObra ? (subtotalMateriales * 0.7) : 0;
+
+            const total = subtotalMateriales + costManoObra;
+
+            document.getElementById('totalDisplay').textContent = '$' + Math.round(total).toLocaleString();
+            document.getElementById('valVidrio').textContent = '$' + Math.round(costVidrio).toLocaleString();
+            document.getElementById('valLed').textContent = '$' + Math.round(costLed).toLocaleString();
+            document.getElementById('valTouch').textContent = '$' + Math.round(costTouch).toLocaleString();
+            document.getElementById('valFranjas').textContent = '$' + Math.round(costFranjas).toLocaleString();
+            document.getElementById('valSilicona').textContent = '$' + Math.round(costSilicona).toLocaleString();
+            document.getElementById('valManoObra').textContent = '$' + Math.round(costManoObra).toLocaleString();
+        }
+
+        function shareWs() {
+            const total = document.getElementById('totalDisplay').textContent;
+            const width = document.getElementById('ancho').value;
+            const height = document.getElementById('alto').value;
+            const typeText = document.getElementById('tipoEspejo').options[document.getElementById('tipoEspejo').selectedIndex].text;
+            const siliconaQty = document.getElementById('silicona').value;
+            const hasManoObra = document.getElementById('tieneManoObra').checked;
+
+            let msg = `*COTIZACIÓN ESPEJO TOUCH - SPESFIDEM*%0A%0A`;
+            msg += `*Medidas:* ${width} x ${height} cm%0A`;
+            msg += `*Especificación:* ${typeText}%0A`;
+            if (document.getElementById('tieneLed').checked) msg += `*Incluye:* Luz LED Perimetral%0A`;
+            if (document.getElementById('tieneTouch').checked) msg += `*Incluye:* Sensor de Encendido Touch%0A`;
+            if (document.getElementById('tieneFranjas').checked) msg += `*Incluye:* Diseño con Franjas ($60.000)%0A`;
+            if (parseInt(siliconaQty) > 0) msg += `*Silicona:* ${siliconaQty} tubos%0A`;
+            if (hasManoObra) msg += `*Servicio:* Incluye Mano de Obra (Instalación)%0A`;
+            msg += `%0A*TOTAL ESTIMADO:* ${total}`;
+
+            window.open(`https://wa.me/573046291152?text=${msg}`, '_blank');
+        }
+    </script>
+</body>
+
+</html>

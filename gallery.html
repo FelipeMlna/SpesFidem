@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería - Spesfidem Aluminio</title>
+    <!-- Use existing styles -->
+    <link rel="stylesheet" href="css/style.css?v=2.1">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            padding-top: 80px;
+        }
+
+        .gallery-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        .gallery-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .gallery-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .gallery-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .gallery-caption {
+            padding: 1rem;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="gallery-header">
+        <a href="index.html?section=productos" class="back-btn"><i class="fas fa-arrow-left"></i> Volver al Catálogo</a>
+        <h1 class="gallery-title" id="pageTitle">Galería</h1>
+        <!-- Logo mini if needed, or just spacers -->
+        <div style="width: 100px;"></div>
+    </header>
+
+    <main class="viewer-main gallery-container" id="galleryGrid">
+        <!-- Images will be loaded here via JS -->
+    </main>
+
+    <script src="js/cart.js?v=final"></script>
+    <script src="js/app.js?v=20260129_04"></script>
+    <script>
+        // Init gallery page logic specifically
+        document.addEventListener('DOMContentLoaded', () => {
+            // Basic check to see if we are on gallery page is done inside existing script or here
+            initGalleryPage();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,11 @@
+Sistema,Perfil,Medida Base,Descuento (cm),Formula,Notas
+744 (Corrediza),Cabezal / Sillar,Ancho,0,Ancho Total,
+744 (Corrediza),Jamba,Alto,0,Alto Total,
+744 (Corrediza),Hoja Horizontal,Ancho,-1.5,(Ancho - 1.5) / 2,Para 2 Naves
+744 (Corrediza),Hoja Vertical,Alto,-2.5,Alto - 2.5,Para Enganche y Traslape
+8025 (Corrediza),Cabezal,Ancho,0,Ancho Total,
+8025 (Corrediza),Jamba,Alto,0,Alto Total,
+8025 (Corrediza),Hoja,Ancho,-5,(Ancho - 5) / 2,
+5020 (Proyectante),Marco,Ancho/Alto,0,Igual al Vano,
+5020 (Proyectante),Nave,Ancho/Alto,-4.2,Medida - 4.2cm,Para Nave
+Vidrio Templado,Dilatación,Ancho/Alto,-0.5,Mínimo,Para holgura

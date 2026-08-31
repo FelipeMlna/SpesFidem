@@ -1,0 +1,14 @@
+[build]
+  command = "chmod +x build_vercel.sh && ./build_vercel.sh"
+  publish = "vercel_dist"
+
+# Redirigir siempre Firebase/API y las rutas base correctamente (SPA handler)
+[[redirects]]
+  from = "/consultoria/*"
+  to = "/consultoria/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"

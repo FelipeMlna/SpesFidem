@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotización | Spesfidem Aluminio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .quote-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            color: #1e293b;
+        }
+
+        .quote-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .quote-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .quote-table th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 1rem;
+            color: #64748b;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .quote-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .total-row {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-align: right;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 0 0 12px 12px;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            .quote-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body style="background: #f1f5f9; margin:0;">
+
+    <div class="quote-container">
+        <div class="quote-header">
+            <div>
+                <h1 style="color: var(--primary); margin: 0; font-size: 1.8rem;">SPESFIDEM <span
+                        style="color:var(--accent)">ALUMINIO</span></h1>
+                <p style="color: #64748b; margin: 0.2rem 0;">Simulador de Cotización - Estimados Aproximados</p>
+            </div>
+            <div style="text-align: right;">
+                <h2 style="margin:0; color:#64748b; font-size: 1rem;">N° COT-00<span id="quoteId"></span></h2>
+                <p id="quoteDate" style="margin:0;"></p>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 2rem; display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+            <div>
+                <h3 style="color: var(--accent); margin-bottom: 0.5rem; font-size: 1rem; text-transform: uppercase;">
+                    Información del Cliente</h3>
+                <p style="margin: 0.2rem 0;"><strong id="clientName"></strong></p>
+                <p style="margin: 0.2rem 0;" id="clientContact"></p>
+                <p style="margin: 0.2rem 0;" id="clientEmail"></p>
+            </div>
+            <div style="text-align: right;">
+                <h3 style="color: var(--accent); margin-bottom: 0.5rem; font-size: 1rem; text-transform: uppercase;">
+                    Lugar de Obra</h3>
+                <p style="margin: 0.2rem 0;" id="clientCity"></p>
+                <p style="margin: 0.2rem 0;" id="clientAddress"></p>
+            </div>
+        </div>
+
+        <table class="quote-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cant.</th>
+                    <th>Color</th>
+                    <th>Vidrio / Tamaño</th>
+                    <th style="text-align: right;">Valor Unit.</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody id="quoteItems">
+                <!-- Items will be injected here -->
+            </tbody>
+        </table>
+
+        <div class="total-row"
+            style="background: #f8fafc; padding: 1.5rem; border-radius: 0 0 12px 12px; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center;">
+            <div style="text-align: right; color: #64748b; font-size: 1rem;">SUBTOTAL:</div>
+            <div style="text-align: right; color: #64748b; font-size: 1rem; font-weight: 600;" id="subtotalVal"></div>
+
+            <div style="text-align: right; color: #64748b; font-size: 1rem;">IVA (19%):</div>
+            <div style="text-align: right; color: #64748b; font-size: 1rem; font-weight: 600;" id="ivaVal"></div>
+
+            <div
+                style="text-align: right; color: var(--accent); font-size: 1.5rem; font-weight: 800; padding-top: 0.5rem; border-top: 1px solid #e2e8f0;">
+                TOTAL A PAGAR:</div>
+            <div style="text-align: right; color: var(--accent); font-size: 1.5rem; font-weight: 800; padding-top: 0.5rem; border-top: 1px solid #e2e8f0;"
+                id="grandTotal"></div>
+        </div>
+        <!-- Payment Breakdown Container -->
+        <div id="paymentBreakdown" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem;"></div>
+
+        <div
+            style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem; color: #64748b; font-size: 0.85rem;">
+            <p style="color:var(--accent); font-weight:700;">* IMPORTANTE: Los valores expresados son una SIMULACIÓN
+                aproximada y llevan incluido el IVA del 19% vigente en Colombia.</p>
+            <p>* La vigencia de esta simulación de precios es de 15 días calendario.</p>
+        </div>
+
+        <div class="no-print" style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center;">
+            <button onclick="window.print()" class="btn-primary"
+                style="background:#64748b; padding: 0.8rem 1.5rem; border-radius: 6px; border:none; color:white; font-weight:600; cursor:pointer;">
+                <i class="fas fa-print"></i> Imprimir Cotización
+            </button>
+            <button onclick="window.location.href='register.html'" class="btn-metallic-gold">
+                <i class="fas fa-user-plus"></i> REGISTRARSE
+            </button>
+        </div>
+    </div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/crm-auth.js"></script>
+    <script src="js/crm-data.js"></script>
+    <script src="js/app.js?v=RESTORED_V3"></script>
+    <script>
+        if (window.SpesFirebase) window.SpesFirebase.initFirebase();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for DB to be initialized from app.js
+            try {
+                if (typeof db !== 'undefined') {
+                    await db.init();
+                }
+            } catch (e) {
+                console.error("DB init failed in quotation:", e);
+            }
+
+            const data = JSON.parse(sessionStorage.getItem('currentQuotation'));
+            if (!data) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Populate Document
+            // Fetch and format Sequential Serial Number
+            if (!data.serial) {
+                const nextSerial = await db.getNextSerial();
+                data.serial = nextSerial;
+                sessionStorage.setItem('currentQuotation', JSON.stringify(data));
+            }
+            const paddedSerial = String(data.serial).padStart(7, '0');
+            document.getElementById('quoteId').textContent = `COT - ${paddedSerial}`;
+            document.getElementById('quoteDate').textContent = data.date || new Date().toLocaleDateString('es-CO');
+            document.getElementById('clientName').textContent = data.fullName;
+            document.getElementById('clientContact').textContent = 'Cel: ' + data.cellphone + (data.landline ? ' | Tel: ' + data.landline : '');
+            document.getElementById('clientEmail').textContent = data.email || 'N/A';
+            document.getElementById('clientCity').textContent = data.city;
+            document.getElementById('clientAddress').textContent = data.address || 'N/A';
+
+            const tbody = document.getElementById('quoteItems');
+            if (data.items && Array.isArray(data.items)) {
+                data.items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight:600;">${item.product}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.color || 'Natural'}</td>
+                        <td style="font-size:0.85rem;">${item.glass || 'Monolítico'}<br><span style="color:#94a3b8">${item.size || ''}</span></td>
+                        <td style="text-align: right;">$${(item.unitPrice || 0).toLocaleString()}</td>
+                        <td style="text-align: right; font-weight:600;">$${(item.total || 0).toLocaleString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('subtotalVal').textContent = '$' + (data.subtotal || (data.grandTotal / 1.19) || 0).toLocaleString() + ' COP';
+            document.getElementById('ivaVal').textContent = '$' + (data.iva || (data.grandTotal - (data.grandTotal / 1.19)) || 0).toLocaleString() + ' COP';
+            document.getElementById('grandTotal').textContent = '$' + (data.grandTotal || 0).toLocaleString() + ' COP';
+
+            // Payment Breakdown Logic
+            const total = data.grandTotal || 0;
+            const breakdownContainer = document.getElementById('paymentBreakdown');
+            const plan = data.paymentPlan || '75-25';
+
+            if (breakdownContainer) {
+                if (plan === '75-25') {
+                    const advance = Math.round(total * 0.75);
+                    const balance = Math.round(total * 0.25);
+                    breakdownContainer.innerHTML = `
+                        <div style="display:flex; justify-content:flex-end; padding:0.5rem 1.5rem; color:#64748b;">
+                            <span style="margin-right:1rem;">Anticipo Sugerido (75%):</span>
+                            <span style="width:120px; text-align:right;">$${advance.toLocaleString()}</span>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; padding:0.5rem 1.5rem; font-weight:700; color:#0f172a;">
+                            <span style="margin-right:1rem;">Saldo Contra Entrega (25%):</span>
+                            <span style="width:120px; text-align:right;">$${balance.toLocaleString()}</span>
+                        </div>
+                    `;
+                } else if (plan === '100') {
+                    breakdownContainer.innerHTML = `
+                        <div style="display:flex; justify-content:flex-end; padding:0.5rem 1.5rem; color:#16a34a; font-weight:700;">
+                            <span style="margin-right:1rem;">VALOR TOTAL (100%):</span>
+                            <span style="width:120px; text-align:right;">$${total.toLocaleString()}</span>
+                        </div>
+                    `;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
