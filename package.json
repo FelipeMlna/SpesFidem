@@ -1,0 +1,32 @@
+{
+  "name": "spesfidem-backend",
+  "version": "1.0.0",
+  "description": "Backend REST API para la plataforma SpesFidem con Node.js, Express y PostgreSQL",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "migrate": "node scripts/migrateJsonToPg.js"
+  },
+  "keywords": [
+    "express",
+    "postgresql",
+    "jwt",
+    "spesfidem",
+    "backend",
+    "node"
+  ],
+  "author": "SpesFidem Developer",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

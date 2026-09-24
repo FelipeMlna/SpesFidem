@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultoría Visual | Spesfidem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    :root {
+      --bg-deep: #020617;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --glass: rgba(15, 23, 42, 0.65);
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { 
+      background: var(--bg-deep); 
+      color: var(--text); 
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; height: 70px; flex-shrink: 0;
+      background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px); z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.25rem; }
+    .logo i { color: var(--accent); font-size: 1.5rem; filter: drop-shadow(0 0 8px var(--accent-glow)); }
+    
+    .room-badge {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 50px; padding: 0.4rem 1.2rem; font-size: 0.85rem;
+    }
+    .room-badge span { color: var(--accent); font-family: monospace; font-weight: 800; letter-spacing: 2px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+    /* ─── COMMON UI ─── */
+    .glass-card {
+      background: var(--glass); backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: 1.5rem;
+      padding: 1.5rem; display: flex; flex-direction: column;
+    }
+    .panel-title {
+      font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.1rem;
+      color: var(--accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;
+    }
+
+    .form-control {
+      width: 100%; padding: 0.75rem 1rem; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); border-radius: 12px;
+      color: white; font-size: 0.95rem; outline: none; transition: all 0.3s;
+    }
+    .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    label { display: block; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 0.5rem; }
+
+    /* ─── LOBBY ─── */
+    #lobby { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .lobby-card { text-align: center; max-width: 420px; width: 100%; }
+    .lobby-card h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; margin-bottom: 1rem; }
+    .lobby-card p { color: var(--muted); margin-bottom: 2rem; }
+
+    /* ─── ROOM LAYOUT ─── */
+    #room { 
+      flex: 1; display: none; 
+      grid-template-columns: 1fr; 
+      gap: 1.5rem; padding: 1.5rem;
+      overflow-y: auto;
+    }
+    @media (min-width: 1024px) {
+      #room { 
+        grid-template-columns: repeat(2, 1fr);
+        height: calc(100vh - 70px);
+        overflow: hidden;
+      }
+    }
+
+    /* Video Panel */
+    .video-container { position: relative; background: #000; border-radius: 1rem; overflow: hidden; flex: 1; }
+    #remoteVideo { width:100%; height:100%; object-fit:cover; }
+    #localPip { 
+      position: absolute; bottom: 15px; right: 15px; width: 120px; height: 160px;
+      border: 2px solid var(--accent); border-radius: 12px; overflow: hidden; background: #111;
+    }
+    #localVideo { width:100%; height:100%; object-fit:cover; transform: scaleX(-1); }
+    
+    .video-controls {
+      position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; background: rgba(2,6,23,0.8);
+      padding: 0.75rem 1.25rem; border-radius: 50px; border: 1px solid var(--border);
+    }
+    .btn-icon {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: 0.3s;
+    }
+    .btn-icon:hover { background: var(--accent); color: var(--bg-deep); }
+    .btn-icon.off { background: #ef4444; }
+
+    /* Visualizer */
+    .viz-container { height: 200px; background: rgba(0,0,0,0.2); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin-top: 1rem; }
+    #vizWindow { border: 4px solid var(--accent); box-shadow: 0 0 30px var(--accent-glow); transition: 0.5s; background: rgba(56,189,248,0.05); }
+
+    /* Hojas Selector */
+    .leaf-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .btn-leaf { 
+      padding: 0.75rem; border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+      color: var(--muted); border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.3s;
+    }
+    .btn-leaf.active { background: var(--accent); color: var(--bg-deep); border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+
+    /* Gallery */
+    .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; overflow-y: auto; }
+    @media (min-width: 640px) { .gallery-grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 1024px) { .gallery-grid { grid-template-columns: 1fr; } }
+    
+    .gallery-item {
+      position: relative; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden;
+      cursor: pointer; border: 2px solid transparent; transition: 0.3s;
+    }
+    .gallery-item.active { border-color: #10b981; transform: scale(1.02); box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem 0.75rem 0.5rem; background: linear-gradient(to top, black, transparent); font-size: 0.7rem; font-weight: 800; }
+
+    #toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      background: #0f172a; color: white; padding: 12px 24px; border-radius: 12px;
+      border: 1px solid var(--accent); z-index: 999; opacity: 0; transition: 0.3s; pointer-events: none;
+    }
+    #toast.show { opacity: 1; bottom: 3rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo"><i class="fas fa-video"></i> Consultoría Spesfidem</div>
+    <div id="roomBadge" style="display:none;">
+      <div class="room-badge"><div class="dot"></div> Código: <span id="displayRoom">——</span></div>
+    </div>
+    <a href="index.html" class="btn-exit" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.8rem;">SALIR</a>
+  </header>
+
+  <div id="toast"></div>
+
+  <div id="lobby">
+    <div class="glass-card lobby-card">
+      <h1 style="font-family:'Outfit'">Bienvenido</h1>
+      <p>Entra a una sala de consulta para comenzar la asesoría técnica.</p>
+      <input type="text" id="roomInput" class="form-control" placeholder="CÓDIGO DE SALA" style="text-align:center; font-family:monospace; font-size:1.5rem; margin-bottom:1rem;">
+      <button class="btn-primary" onclick="joinRoom()" style="background:var(--accent); color:var(--bg-deep); border:none; width:100%; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
+        UNIRSE A LA SALA
+      </button>
+      <div style="margin: 1.5rem 0; color:var(--muted); font-size:0.8rem;">O crea una nueva:</div>
+      <button onclick="createRoom()" style="background:transparent; border:1px solid var(--border); color:white; width:100%; padding:12px; border-radius:12px; cursor:pointer;">
+        Generar Nueva Sala
+      </button>
+    </div>
+  </div>
+
+  <div id="room">
+    <!-- PANEL 1: Video -->
+    <div class="glass-card" style="min-height: 450px;">
+      <h2 class="panel-title"><i class="fas fa-video"></i> Sesión en Vivo</h2>
+      <div class="video-container">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <div id="localPip"><video id="localVideo" autoplay playsinline muted></video></div>
+        <div class="video-controls">
+          <button class="btn-icon" id="micBtn" onclick="toggleMic()" title="Micrófono"><i class="fas fa-microphone"></i></button>
+          <button class="btn-icon" id="camBtn" onclick="toggleCam()" title="Cámara"><i class="fas fa-video"></i></button>
+          <button class="btn-icon" onclick="switchCam()" style="width: auto; padding: 0 15px; border-radius: 50px; background: #2563eb; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-sync"></i> Girar Cámara
+          </button>
+        </div>
+      </div>
+      <div class="viz-container">
+        <div id="vizWindow"></div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: Especificaciones -->
+    <div class="glass-card" style="overflow-y: auto;">
+      <h2 class="panel-title"><i class="fas fa-tools"></i> Especificaciones</h2>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:1.5rem;">
+        <div>
+          <label>Ancho (m)</label>
+          <input type="number" step="0.01" class="form-control" id="spec_width" value="1.20" onchange="sync('width', this.value)">
+        </div>
+        <div>
+          <label>Alto (m)</label>
+          <input type="number" step="0.01" class="form-control" id="spec_height" value="1.50" onchange="sync('height', this.value)">
+        </div>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <label>N° de Hojas / Puertas</label>
+        <div class="leaf-grid">
+          <button class="btn-leaf active" onclick="setLeaf(2)">2</button>
+          <button class="btn-leaf" onclick="setLeaf(3)">3</button>
+          <button class="btn-leaf" onclick="setLeaf(4)">4</button>
+          <button class="btn-leaf" onclick="setLeaf(5)">5</button>
+          <button class="btn-leaf" onclick="setLeaf(6)">6</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <label>Perfil de Aluminio</label>
+        <select class="form-control" id="spec_profile" onchange="sync('profile', this.value)">
+          <option value="Natural">Natural (Plata)</option>
+          <option value="Negro">Negro Intenso</option>
+          <option value="Madera">Acabado Madera</option>
+          <option value="Blanco">Blanco</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <label>Tipo de Vidrio</label>
+        <select class="form-control" id="spec_glass" onchange="sync('glass', this.value)">
+          <option value="Templado">Templado de Seguridad</option>
+          <option value="Crudo">Crudo (Flotado)</option>
+          <option value="Esmerilado">Esmerilado / Sandblasting</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Notas de Consulta</label>
+        <textarea class="form-control" id="spec_notes" rows="4" style="resize:none" onchange="sync('notes', this.value)"></textarea>
+      </div>
+    </div>
+
+
+  </div>
+
+  <script>
+    const SERVER = 'https://spesfidem-video-server.onrender.com';
+
+    let socket, localStream, roomId, pc, facing = 'user';
+    let state = { width: 1.2, height: 1.5, leafCount: '2', profile: 'Natural', glass: 'Templado' };
+
+    // ── SOCKET & WEBRTC ──
+    function initSocket() {
+      socket = io(SERVER);
+      socket.on('offer', onOffer);
+      socket.on('answer', onAnswer);
+      socket.on('ice-candidate', onIce);
+      socket.on('state-updated', ({ key, value }) => {
+        state[key] = value;
+        updateUI();
+      });
+      socket.on('user-joined', () => createOffer());
+      socket.on('existing-peers', (peers) => { if(peers.length > 0) createOffer(); });
+    }
+
+    async function createRoom() { roomId = Math.random().toString(36).substring(2,8).toUpperCase(); joinRoom(); }
+
+    async function joinRoom() {
+      roomId = roomId || document.getElementById('roomInput').value.trim().toUpperCase();
+      if(!roomId) return alert("Ingresa un código");
+      
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({video: {facingMode: facing}, audio:true});
+        document.getElementById('localVideo').srcObject = localStream;
+      } catch(e) { console.warn(e); }
+
+      document.getElementById('lobby').style.display = 'none';
+      document.getElementById('room').style.display = 'grid';
+      document.getElementById('roomBadge').style.display = 'block';
+      document.getElementById('displayRoom').textContent = roomId;
+
+      initSocket();
+      socket.emit('join-room', roomId);
+      updateUI();
+    }
+
+    async function createOffer() {
+      pc = setupPC();
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socket.emit('offer', { target: roomId, sdp: offer }); // No exact peer targeting in simple mode here, uses broad signal
+    }
+
+    function setupPC() {
+      const newPc = new RTCPeerConnection({ iceServers: [{urls:'stun:stun.l.google.com:19302'}] });
+      if(localStream) localStream.getTracks().forEach(t => newPc.addTrack(t, localStream));
+      newPc.ontrack = e => document.getElementById('remoteVideo').srcObject = e.streams[0];
+      newPc.onicecandidate = e => e.candidate && socket.emit('ice-candidate', { candidate: e.candidate });
+      return newPc;
+    }
+
+    async function onOffer(data) {
+      if(!pc) pc = setupPC();
+      await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit('answer', { sdp: answer });
+    }
+    async function onAnswer(data) { pc && await pc.setRemoteDescription(new RTCSessionDescription(data.sdp)); }
+    async function onIce(data) { pc && data.candidate && await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); }
+
+    // ── SYNC & UI ──
+    function sync(key, value) {
+      state[key] = value;
+      socket.emit('update-state', { roomId, key, value });
+      updateUI();
+    }
+
+    function setLeaf(n) {
+      document.querySelectorAll('.btn-leaf').forEach(b => b.classList.toggle('active', b.textContent == n));
+      sync('leafCount', n.toString());
+    }
+
+    function updateUI() {
+      document.getElementById('spec_width').value = state.width;
+      document.getElementById('spec_height').value = state.height;
+      document.getElementById('spec_profile').value = state.profile;
+      document.getElementById('spec_glass').value = state.glass;
+      
+      // Update viz
+      const viz = document.getElementById('vizWindow');
+      const scale = Math.min(150 / state.width, 150 / state.height, 60);
+      viz.style.width = (state.width * scale) + "px";
+      viz.style.height = (state.height * scale) + "px";
+    }
+
+    // ── VIDEO CONTROLS ──
+    function toggleMic() {
+      const t = localStream.getAudioTracks()[0];
+      t.enabled = !t.enabled;
+      document.getElementById('micBtn').classList.toggle('off', !t.enabled);
+    }
+    function toggleCam() {
+      const t = localStream.getVideoTracks()[0];
+      t.enabled = !t.enabled;
+      document.getElementById('camBtn').classList.toggle('off', !t.enabled);
+    }
+    async function switchCam() {
+      try {
+        facing = facing === 'user' ? 'environment' : 'user';
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: facing },
+          audio: false
+        });
+        
+        const newTrack = newStream.getVideoTracks()[0];
+        const oldTrack = localStream.getVideoTracks()[0];
+        
+        if (oldTrack) oldTrack.stop();
+        localStream.removeTrack(oldTrack);
+        localStream.addTrack(newTrack);
+        
+        document.getElementById('localVideo').srcObject = new MediaStream([newTrack]);
+        document.getElementById('localVideo').style.transform = facing === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+
+        // Replace track in peer connection
+        if (pc) {
+          const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+          if (sender) sender.replaceTrack(newTrack);
+        }
+      } catch (e) {
+        console.error("Error switching camera:", e);
+        alert("No se pudo cambiar la cámara");
+      }
+    }
+
+    // Auto-join
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('room')) {
+      document.getElementById('roomInput').value = urlParams.get('room').toUpperCase();
+      setTimeout(joinRoom, 500);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "Spesfidem Aluminio",
+  "short_name": "Spesfidem",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "description": "Ventanería de Alto Desempeño y Sistemas Arquitectónicos Premium.",
+  "icons": [
+    {
+      "src": "images/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait-primary"
+}

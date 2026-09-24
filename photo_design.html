@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foto Diseño Interactivo | Spesfidem Aluminio</title>
+    <link rel="stylesheet" href="css/style.css?v=167">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Strict Auth Guard for Photo Design -->
+    <script>
+        (function enforcePhotoDesignAuth() {
+            let isAuthenticated = false;
+            try {
+                const crmData = JSON.parse(sessionStorage.getItem('spesfidem_crm_session') || '{}');
+                const clientUser = JSON.parse(localStorage.getItem('spesfidem_client_user') || '{}');
+                if ((crmData && crmData.name) || (clientUser && clientUser.loggedIn)) {
+                    isAuthenticated = true;
+                }
+            } catch (e) { }
+
+            if (!isAuthenticated) {
+                window.location.replace('crm-login.html?redirect=photo_design.html');
+            }
+        })();
+    </script>
+
+    <style>
+        body {
+            background-color: #020617;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .design-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .design-header {
+            text-align: center;
+            position: relative;
+        }
+
+        .design-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.3rem;
+        }
+
+        .design-description {
+            color: #94a3b8;
+            max-width: 750px;
+            margin: 0 auto;
+            font-size: 0.95rem;
+        }
+
+        /* Guidance Banner */
+        .guidance-banner {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-left: 4px solid #38bdf8;
+            border-radius: 0.8rem;
+            padding: 0.9rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .guidance-step {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .guidance-badge {
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .guidance-text {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Toolbar Actions */
+        .toolbar-actions {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            padding: 0.6rem 1rem;
+            border-radius: 0.6rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .tool-btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            transform: translateY(-1px);
+        }
+
+        .tool-btn.active {
+            background: #38bdf8 !important;
+            color: #0f172a !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .tool-btn.btn-danger {
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        .tool-btn.btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #ffffff;
+        }
+
+        .tool-btn.btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .tool-btn.btn-success:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+        }
+
+        /* Workspace Grid */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .design-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .guidance-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Sidebar Controls Panel */
+        .controls-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.2rem;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            height: fit-content;
+        }
+
+        .control-group h3 {
+            font-size: 0.9rem;
+            color: #38bdf8;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Design Product Cards Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .product-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 0.8rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s ease;
+        }
+
+        .product-card:hover {
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .product-card-img {
+            aspect-ratio: 1;
+            width: 100%;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .product-card-body {
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .btn-add-design {
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: #0f172a;
+            font-weight: 800;
+            border: none;
+            padding: 0.45rem 0.6rem;
+            border-radius: 0.4rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-design:hover {
+            background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+            transform: scale(1.02);
+        }
+
+        .slider-control {
+            width: 100%;
+            margin-top: 0.4rem;
+            accent-color: #38bdf8;
+        }
+
+        /* Canvas Workspace Area */
+        .workspace-area {
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            border-radius: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 580px;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+            user-select: none;
+        }
+
+        /* Background Photo Element */
+        #bgPhotoEl {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            z-index: 1;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Layer Container */
+        #layersContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        /* Interactive Design Layer Object */
+        .design-layer-item {
+            position: absolute;
+            cursor: move;
+            touch-action: none;
+            user-select: none;
+            display: inline-block;
+            box-sizing: border-box;
+        }
+
+        .design-layer-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+        }
+
+        .design-layer-item.selected {
+            border: 2px dashed #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        /* Resize Corner Handles */
+        .layer-handle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #ffffff;
+            border: 2px solid #38bdf8;
+            border-radius: 50%;
+            z-index: 15;
+            display: none;
+        }
+
+        .design-layer-item.selected .layer-handle {
+            display: block;
+        }
+
+        .handle-tl { top: -7px; left: -7px; cursor: nwse-resize; }
+        .handle-tr { top: -7px; right: -7px; cursor: nesw-resize; }
+        .handle-bl { bottom: -7px; left: -7px; cursor: nesw-resize; }
+        .handle-br { bottom: -7px; right: -7px; cursor: nwse-resize; }
+
+        /* Sample Spaces Presets Widget */
+        .sample-spaces-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .sample-chip {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            padding: 0.35rem 0.7rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .sample-chip:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            color: #38bdf8;
+        }
+
+        /* Loading & Empty Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 6, 23, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 25;
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="design-container">
+        <!-- Back Button -->
+        <a href="index.html#contacto"
+            style="align-self: flex-start; color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; transition: color 0.3s; font-weight: 600; font-size: 0.9rem;">
+            <i class="fas fa-arrow-left"></i> Volver a Spesfidem
+        </a>
+
+        <header class="design-header">
+            <h1>Foto Diseño Interactivo <span
+                    style="font-size: 0.75rem; vertical-align: middle; background: linear-gradient(135deg, #38bdf8, #0284c7); color: #0f172a; padding: 3px 10px; border-radius: 20px; font-weight: 800; letter-spacing: 1px;">SIMULADOR
+                    VISUAL</span>
+            </h1>
+            <p class="design-description">Sube una fotografía de tu espacio y agrega uno o varios diseños para visualizar cómo podría verse el resultado.</p>
+        </header>
+
+        <!-- Guidance Step Banner -->
+        <div class="guidance-banner" id="guidanceBanner">
+            <div class="guidance-step">
+                <span class="guidance-badge" id="stepBadge">Paso 1</span>
+                <span class="guidance-text" id="stepText">📷 Sube una fotografía de tu espacio o haz clic en "➕ Agregar al diseño" en cualquier producto.</span>
+            </div>
+            <div style="font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 0.4rem;">
+                <i class="fas fa-magic" style="color:#38bdf8;"></i> Spesfidem Visualizer
+            </div>
+        </div>
+
+        <!-- Toolbar Actions -->
+        <div class="toolbar-actions">
+            <label class="tool-btn active" style="position: relative;">
+                <i class="fas fa-camera" style="color:#0f172a;"></i> 📷 Subir mi fotografía
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            </label>
+            <button class="tool-btn" id="cameraBtn">
+                <i class="fas fa-video" style="color:#38bdf8;"></i> Usar Cámara
+            </button>
+
+            <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
+
+            <button class="tool-btn" id="btnUndo">
+                <i class="fas fa-undo"></i> Deshacer
+            </button>
+            <button class="tool-btn btn-danger" id="btnDeleteSelected">
+                <i class="fas fa-trash-alt"></i> 🗑️ Eliminar diseño
+            </button>
+            <button class="tool-btn btn-danger" id="btnResetAll">
+                <i class="fas fa-sync-alt"></i> 🔄 Reiniciar
+            </button>
+
+            <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
+
+            <button class="tool-btn" id="btnTogglePreview">
+                <i class="fas fa-eye"></i> 👁️ Vista previa
+            </button>
+            <button class="tool-btn btn-success" id="btnDownload">
+                <i class="fas fa-download"></i> 💾 Guardar Diseño
+            </button>
+        </div>
+
+        <!-- Main Workspace Grid -->
+        <div class="workspace-grid">
+            <!-- Sidebar Controls Panel -->
+            <aside class="controls-panel">
+                <!-- Preset Sample Spaces Section -->
+                <div class="control-group">
+                    <h3><i class="fas fa-images"></i> Probador Rápido (Espacios)</h3>
+                    <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:0.4rem;">Si no tienes foto en este momento, elige un espacio de ejemplo:</p>
+                    <div class="sample-spaces-bar">
+                        <span class="sample-chip" onclick="loadPresetSpace('ventana')"><i class="fas fa-window-maximize"></i> Ventana</span>
+                        <span class="sample-chip" onclick="loadPresetSpace('bano')"><i class="fas fa-bath"></i> Baño</span>
+                        <span class="sample-chip" onclick="loadPresetSpace('puerta')"><i class="fas fa-door-open"></i> Puerta</span>
+                        <span class="sample-chip" onclick="loadPresetSpace('fachada')"><i class="fas fa-building"></i> Fachada</span>
+                    </div>
+                </div>
+
+                <!-- Catalog Section -->
+                <div class="control-group">
+                    <h3><i class="fas fa-th-large"></i> Diseños Disponibles</h3>
+                    <select id="categorySelect"
+                        style="width: 100%; padding: 0.7rem; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: 0.6rem; font-weight: 600; margin-bottom: 0.8rem;">
+                        <option value="ventanas">Ventanería de Aluminio</option>
+                        <option value="puertas">Puertas Principales y Patio</option>
+                        <option value="banos">Divisiones de Baño</option>
+                        <option value="espejos">Espejos & Cristales</option>
+                    </select>
+
+                    <div class="product-grid" id="galleryList">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Selected Layer Controls -->
+                <div class="control-group" id="layerAdjustGroup">
+                    <h3><i class="fas fa-sliders-h"></i> Ajustar Diseño Seleccionado</h3>
+                    
+                    <label style="font-size: 0.8rem; color: #94a3b8; display: block;">↔️ Cambiar Tamaño</label>
+                    <input type="range" class="slider-control" id="scaleControl" min="50" max="600" value="220">
+
+                    <label style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.8rem; display: block;">🔄 Rotar (Grados)</label>
+                    <input type="range" class="slider-control" id="rotationControl" min="0" max="360" value="0">
+
+                    <label style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.8rem; display: block;">💧 Opacidad / Transparencia</label>
+                    <input type="range" class="slider-control" id="opacityControl" min="20" max="100" value="95">
+
+                    <button class="tool-btn btn-danger" id="btnRemoveLayerSidebar" style="width: 100%; margin-top: 1rem; justify-content: center;">
+                        <i class="fas fa-trash-alt"></i> Quitar Este Diseño
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Workspace Area -->
+            <main class="workspace-area" id="workspaceArea">
+                <!-- Background Image Element -->
+                <img id="bgPhotoEl" alt="Foto de Espacio">
+
+                <!-- Layer Container -->
+                <div id="layersContainer"></div>
+
+                <!-- Camera Overlay -->
+                <div id="cameraInterface"
+                    style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; background: #000; border-radius: 1.2rem; overflow: hidden;">
+                    <video id="cameraFeed" autoplay playsinline
+                        style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <div
+                        style="position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
+                        <button id="captureBtn"
+                            style="width: 65px; height: 65px; border-radius: 50%; background: white; border: 4px solid rgba(255,255,255,0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+                            <div style="width: 45px; height: 45px; border-radius: 50%; background: #ef4444;"></div>
+                        </button>
+                        <p style="color: white; font-size: 0.85rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-weight:600;">Tomar Fotografía</p>
+                    </div>
+                    <button id="closeCameraBtn"
+                        style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 1.3rem; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="loading-overlay" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem; color: #cbd5e1; font-weight: 600;">Cargando imagen...</p>
+                </div>
+
+                <p id="placeholderText"
+                    style="color: #64748b; text-align: center; font-size: 0.95rem; line-height: 1.6; user-select: none; pointer-events: none; position: absolute; z-index: 2;">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2.8rem; color: #334155; margin-bottom: 0.8rem; display: block;"></i>
+                    Sube una fotografía de tu espacio o haz clic en "➕ Agregar al diseño"<br>en cualquiera de nuestros productos para visualizarlo.
+                </p>
+            </main>
+        </div>
+    </div>
+
+    <!-- Application Script Engine -->
+    <script>
+        // Existing SPESFIDEM Gallery Resources (Real Local Paths)
+        const PRODUCTS = {
+            ventanas: [
+                { title: "Ventana Corrediza 1", src: "images/gallery/simulador_diseno/Imagen soltada.png" },
+                { title: "Ventana Corrediza 2", src: "images/gallery/simulador_diseno/Imagen soltada (2).png" },
+                { title: "Ventana Corrediza 3", src: "images/gallery/simulador_diseno/Imagen soltada (3).png" },
+                { title: "Ventana Corrediza 4", src: "images/gallery/simulador_diseno/Imagen soltada (4).png" },
+                { title: "Ventana Corrediza 5", src: "images/gallery/simulador_diseno/Imagen soltada (5).png" },
+                { title: "Ventana Corrediza 6", src: "images/gallery/simulador_diseno/Imagen soltada (6).png" },
+                { title: "Ventana Corrediza 7", src: "images/gallery/simulador_diseno/Imagen soltada (7).png" },
+                { title: "Ventana Corrediza 8", src: "images/gallery/simulador_diseno/Imagen soltada (8).png" },
+                { title: "Ventana Corrediza Real 1", src: "images/gallery/ventana_corrediza/1.jpg" },
+                { title: "Ventana Corrediza Real 2", src: "images/gallery/ventana_corrediza/2.jpg" },
+                { title: "Ventana Batiente 1", src: "images/gallery/ventana_batiente/1.png" },
+                { title: "Ventana Batiente 2", src: "images/gallery/ventana_batiente/2.png" }
+            ],
+            puertas: [
+                { title: "Puerta Principal 1", src: "images/gallery/simulador_diseno/Imagen soltada (9).png" },
+                { title: "Puerta Principal 2", src: "images/gallery/simulador_diseno/Imagen soltada (10).png" },
+                { title: "Puerta Principal 3", src: "images/gallery/simulador_diseno/Imagen soltada (11).png" },
+                { title: "Puerta Principal 4", src: "images/gallery/simulador_diseno/Imagen soltada (12).png" },
+                { title: "Puerta Entrada A", src: "images/gallery/puerta_principal/1.png" },
+                { title: "Puerta Entrada B", src: "images/gallery/puerta_principal/2.png" },
+                { title: "Puerta Entrada C", src: "images/gallery/puerta_principal/3.jpg" }
+            ],
+            banos: [
+                { title: "División Baño 1", src: "images/gallery/simulador_diseno/Imagen soltada (13).png" },
+                { title: "División Baño 2", src: "images/gallery/simulador_diseno/Imagen soltada (14).png" },
+                { title: "División Baño A", src: "images/gallery/division_bano/1.png" },
+                { title: "División Baño B", src: "images/gallery/division_bano/2.png" },
+                { title: "División Baño C", src: "images/gallery/division_bano/3.png" },
+                { title: "División Baño D", src: "images/gallery/division_bano/5.png" }
+            ],
+            espejos: [
+                { title: "Espejo Decorativo 1", src: "images/gallery/simulador_diseno/Imagen soltada (15).png" },
+                { title: "Espejo Decorativo 2", src: "images/gallery/simulador_diseno/Imagen soltada (16).png" },
+                { title: "Vidrio Templado A", src: "images/gallery/vidrio_templado/1.png" },
+                { title: "Vidrio Templado B", src: "images/gallery/vidrio_templado/2.jpg" }
+            ]
+        };
+
+        const PRESET_SPACES = {
+            ventana: 'images/gallery/simulador_diseno/Imagen soltada.png',
+            bano: 'images/gallery/division_bano/5.png',
+            puerta: 'images/gallery/simulador_diseno/Imagen soltada (9).png',
+            fachada: 'images/gallery/simulador_diseno/Imagen soltada (2).png'
+        };
+
+        // DOM Element Cache
+        const workspaceArea = document.getElementById('workspaceArea');
+        const bgPhotoEl = document.getElementById('bgPhotoEl');
+        const layersContainer = document.getElementById('layersContainer');
+        const imageInput = document.getElementById('imageInput');
+        const categorySelect = document.getElementById('categorySelect');
+        const galleryList = document.getElementById('galleryList');
+        const placeholderText = document.getElementById('placeholderText');
+        const loading = document.getElementById('loading');
+
+        // Sidebar Adjustments
+        const scaleControl = document.getElementById('scaleControl');
+        const rotationControl = document.getElementById('rotationControl');
+        const opacityControl = document.getElementById('opacityControl');
+
+        // Buttons
+        const btnUndo = document.getElementById('btnUndo');
+        const btnDeleteSelected = document.getElementById('btnDeleteSelected');
+        const btnRemoveLayerSidebar = document.getElementById('btnRemoveLayerSidebar');
+        const btnResetAll = document.getElementById('btnResetAll');
+        const btnTogglePreview = document.getElementById('btnTogglePreview');
+        const btnDownload = document.getElementById('btnDownload');
+        const stepBadge = document.getElementById('stepBadge');
+        const stepText = document.getElementById('stepText');
+
+        // Camera
+        const cameraBtn = document.getElementById('cameraBtn');
+        const cameraInterface = document.getElementById('cameraInterface');
+        const cameraFeed = document.getElementById('cameraFeed');
+        const captureBtn = document.getElementById('captureBtn');
+        const closeCameraBtn = document.getElementById('closeCameraBtn');
+        let cameraStream = null;
+
+        // State
+        let layerCounter = 0;
+        let selectedLayerEl = null;
+        let isPreviewMode = false;
+
+        // Pointer Drag / Resize State
+        let activeAction = null; // 'move', 'resize'
+        let currentHandle = null;
+        let startPointerX = 0, startPointerY = 0;
+        let startLeft = 0, startTop = 0, startWidth = 0, startHeight = 0;
+
+        // Init App
+        window.addEventListener('load', () => {
+            renderGallery('ventanas');
+            updateGuidanceBanner();
+        });
+
+        categorySelect.addEventListener('change', (e) => renderGallery(e.target.value));
+
+        // Render Product Cards Grid
+        function renderGallery(category) {
+            galleryList.innerHTML = '';
+            const items = PRODUCTS[category] || [];
+
+            items.forEach((prod) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="${prod.src}" class="product-card-img" alt="${prod.title}" onerror="this.src='images/gallery/simulador_diseno/Imagen soltada.png'">
+                    <div class="product-card-body">
+                        <button class="btn-add-design" onclick="addDesignToCanvas('${prod.src}')">
+                            <i class="fas fa-plus-circle"></i> ➕ Agregar al diseño
+                        </button>
+                    </div>
+                `;
+                galleryList.appendChild(card);
+            });
+        }
+
+        // Add Design Layer to Workspace (GUARANTEED TO ADD & DISPLAY)
+        window.addDesignToCanvas = function (src) {
+            loading.style.display = 'flex';
+
+            const testImg = new Image();
+            testImg.onload = () => {
+                createLayerElement(src, testImg.naturalWidth || 200, testImg.naturalHeight || 200);
+                loading.style.display = 'none';
+            };
+            testImg.onerror = () => {
+                // Fallback load
+                createLayerElement('images/gallery/simulador_diseno/Imagen soltada.png', 200, 200);
+                loading.style.display = 'none';
+            };
+            testImg.src = src;
+        };
+
+        function createLayerElement(src, origW, origH) {
+            layerCounter++;
+            const layerId = 'layer_' + layerCounter;
+
+            const layer = document.createElement('div');
+            layer.className = 'design-layer-item selected';
+            layer.id = layerId;
+            layer.dataset.rotation = '0';
+            layer.dataset.opacity = '95';
+
+            // Initial Sizing & Centering
+            const aspect = origH / origW;
+            const initWidth = Math.min(240, workspaceArea.clientWidth * 0.4);
+            const initHeight = initWidth * aspect;
+
+            const initLeft = (workspaceArea.clientWidth - initWidth) / 2;
+            const initTop = (workspaceArea.clientHeight - initHeight) / 2;
+
+            layer.style.left = initLeft + 'px';
+            layer.style.top = initTop + 'px';
+            layer.style.width = initWidth + 'px';
+            layer.style.height = initHeight + 'px';
+            layer.style.zIndex = (10 + layerCounter).toString();
+            layer.style.opacity = '0.95';
+
+            layer.innerHTML = `
+                <img src="${src}" alt="Diseño">
+                <div class="layer-handle handle-tl" data-handle="tl"></div>
+                <div class="layer-handle handle-tr" data-handle="tr"></div>
+                <div class="layer-handle handle-bl" data-handle="bl"></div>
+                <div class="layer-handle handle-br" data-handle="br"></div>
+            `;
+
+            layersContainer.appendChild(layer);
+            selectLayer(layer);
+
+            // Bind Pointer Events for Move and Resize
+            layer.addEventListener('pointerdown', onLayerPointerDown);
+
+            updateGuidanceBanner();
+        }
+
+        // Select Layer Handler
+        function selectLayer(layer) {
+            document.querySelectorAll('.design-layer-item').forEach(l => l.classList.remove('selected'));
+            if (layer) {
+                layer.classList.add('selected');
+                selectedLayerEl = layer;
+                updateControlsFromSelectedLayer();
+            } else {
+                selectedLayerEl = null;
+            }
+        }
+
+        workspaceArea.addEventListener('pointerdown', (e) => {
+            if (e.target === workspaceArea || e.target === bgPhotoEl || e.target === layersContainer) {
+                selectLayer(null);
+            }
+        });
+
+        // Layer Pointer Interactions (Dragging & Corner Handle Resizing)
+        function onLayerPointerDown(e) {
+            e.stopPropagation();
+            const layer = e.currentTarget;
+            selectLayer(layer);
+
+            startPointerX = e.clientX;
+            startPointerY = e.clientY;
+            startLeft = parseFloat(layer.style.left) || 0;
+            startTop = parseFloat(layer.style.top) || 0;
+            startWidth = layer.offsetWidth;
+            startHeight = layer.offsetHeight;
+
+            if (e.target.classList.contains('layer-handle')) {
+                activeAction = 'resize';
+                currentHandle = e.target.dataset.handle;
+            } else {
+                activeAction = 'move';
+            }
+
+            window.addEventListener('pointermove', onWindowPointerMove);
+            window.addEventListener('pointerup', onWindowPointerUp);
+        }
+
+        function onWindowPointerMove(e) {
+            if (!selectedLayerEl || !activeAction) return;
+            e.preventDefault();
+
+            const dx = e.clientX - startPointerX;
+            const dy = e.clientY - startPointerY;
+
+            if (activeAction === 'move') {
+                selectedLayerEl.style.left = (startLeft + dx) + 'px';
+                selectedLayerEl.style.top = (startTop + dy) + 'px';
+            } else if (activeAction === 'resize') {
+                const aspect = startHeight / startWidth;
+                let newW = startWidth;
+
+                if (currentHandle === 'br' || currentHandle === 'tr') {
+                    newW = Math.max(50, startWidth + dx);
+                } else if (currentHandle === 'tl' || currentHandle === 'bl') {
+                    newW = Math.max(50, startWidth - dx);
+                    selectedLayerEl.style.left = (startLeft + (startWidth - newW)) + 'px';
+                }
+
+                const newH = newW * aspect;
+                selectedLayerEl.style.width = newW + 'px';
+                selectedLayerEl.style.height = newH + 'px';
+                scaleControl.value = Math.round(newW);
+            }
+        }
+
+        function onWindowPointerUp(e) {
+            activeAction = null;
+            currentHandle = null;
+            window.removeEventListener('pointermove', onWindowPointerMove);
+            window.removeEventListener('pointerup', onWindowPointerUp);
+        }
+
+        // Sidebar Sliders Event Listeners
+        scaleControl.addEventListener('input', (e) => {
+            if (selectedLayerEl) {
+                const newW = parseFloat(e.target.value);
+                const aspect = selectedLayerEl.offsetHeight / selectedLayerEl.offsetWidth;
+                selectedLayerEl.style.width = newW + 'px';
+                selectedLayerEl.style.height = (newW * aspect) + 'px';
+            }
+        });
+
+        rotationControl.addEventListener('input', (e) => {
+            if (selectedLayerEl) {
+                const rot = e.target.value;
+                selectedLayerEl.dataset.rotation = rot;
+                applyTransform(selectedLayerEl);
+            }
+        });
+
+        opacityControl.addEventListener('input', (e) => {
+            if (selectedLayerEl) {
+                const op = parseFloat(e.target.value) / 100;
+                selectedLayerEl.style.opacity = op;
+                selectedLayerEl.dataset.opacity = e.target.value;
+            }
+        });
+
+        function applyTransform(layer) {
+            const rot = layer.dataset.rotation || '0';
+            layer.style.transform = `rotate(${rot}deg)`;
+        }
+
+        function updateControlsFromSelectedLayer() {
+            if (!selectedLayerEl) return;
+            scaleControl.value = Math.round(selectedLayerEl.offsetWidth);
+            rotationControl.value = selectedLayerEl.dataset.rotation || '0';
+            opacityControl.value = selectedLayerEl.dataset.opacity || '95';
+        }
+
+        // Delete & Reset Controls
+        btnDeleteSelected.addEventListener('click', deleteSelectedLayer);
+        btnRemoveLayerSidebar.addEventListener('click', deleteSelectedLayer);
+
+        function deleteSelectedLayer() {
+            if (selectedLayerEl) {
+                selectedLayerEl.remove();
+                selectedLayerEl = null;
+                const remaining = document.querySelectorAll('.design-layer-item');
+                if (remaining.length > 0) {
+                    selectLayer(remaining[remaining.length - 1]);
+                }
+                updateGuidanceBanner();
+            }
+        }
+
+        btnUndo.addEventListener('click', () => {
+            const items = document.querySelectorAll('.design-layer-item');
+            if (items.length > 0) {
+                items[items.length - 1].remove();
+                selectedLayerEl = null;
+                const remaining = document.querySelectorAll('.design-layer-item');
+                if (remaining.length > 0) {
+                    selectLayer(remaining[remaining.length - 1]);
+                }
+                updateGuidanceBanner();
+            }
+        });
+
+        btnResetAll.addEventListener('click', () => {
+            bgPhotoEl.style.display = 'none';
+            bgPhotoEl.src = '';
+            placeholderText.style.display = 'block';
+            layersContainer.innerHTML = '';
+            selectedLayerEl = null;
+            imageInput.value = '';
+            updateGuidanceBanner();
+        });
+
+        btnTogglePreview.addEventListener('click', () => {
+            isPreviewMode = !isPreviewMode;
+            btnTogglePreview.classList.toggle('active', isPreviewMode);
+            btnTogglePreview.innerHTML = isPreviewMode ?
+                '<i class="fas fa-eye-slash"></i> Ver Manijas' :
+                '<i class="fas fa-eye"></i> 👁️ Vista previa';
+
+            if (isPreviewMode) {
+                document.querySelectorAll('.design-layer-item').forEach(l => l.classList.remove('selected'));
+            } else if (selectedLayerEl) {
+                selectedLayerEl.classList.add('selected');
+            }
+        });
+
+        // Background Photo Loader
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                loading.style.display = 'flex';
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    bgPhotoEl.src = evt.target.result;
+                    bgPhotoEl.style.display = 'block';
+                    placeholderText.style.display = 'none';
+                    loading.style.display = 'none';
+                    updateGuidanceBanner();
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // Preset Space Background Loader
+        window.loadPresetSpace = function (key) {
+            const src = PRESET_SPACES[key];
+            if (!src) return;
+            loading.style.display = 'flex';
+            bgPhotoEl.src = src;
+            bgPhotoEl.style.display = 'block';
+            placeholderText.style.display = 'none';
+            loading.style.display = 'none';
+            updateGuidanceBanner();
+        };
+
+        function updateGuidanceBanner() {
+            const layerCount = document.querySelectorAll('.design-layer-item').length;
+            const hasBg = (bgPhotoEl.style.display === 'block');
+
+            if (!hasBg && layerCount === 0) {
+                stepBadge.textContent = 'Paso 1';
+                stepText.textContent = '📷 Sube una fotografía de tu espacio o haz clic en "➕ Agregar al diseño" en cualquier producto.';
+            } else if (hasBg && layerCount === 0) {
+                stepBadge.textContent = 'Paso 2';
+                stepText.textContent = '✨ Fotografía cargada. Haz clic en "➕ Agregar al diseño" en cualquier producto de la izquierda.';
+            } else {
+                stepBadge.textContent = 'Paso 3';
+                stepText.textContent = '🎨 Diseño agregado. Arrastra la imagen sobre la foto, ajusta su tamaño o rotación.';
+            }
+        }
+
+        // Camera Feed & Snapshot Functions
+        cameraBtn.addEventListener('click', openCameraFeed);
+        captureBtn.addEventListener('click', captureCameraPhoto);
+        closeCameraBtn.addEventListener('click', closeCameraFeed);
+
+        async function openCameraFeed() {
+            try {
+                const constraints = {
+                    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+                    audio: false
+                };
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                cameraFeed.srcObject = cameraStream;
+                cameraInterface.style.display = 'block';
+            } catch (err) {
+                alert("No se pudo acceder a la cámara. Por favor verifica los permisos del navegador.");
+            }
+        }
+
+        function captureCameraPhoto() {
+            if (!cameraStream || !cameraFeed.videoWidth) return;
+
+            loading.style.display = 'flex';
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = cameraFeed.videoWidth;
+            tempCanvas.height = cameraFeed.videoHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(cameraFeed, 0, 0, tempCanvas.width, tempCanvas.height);
+
+            const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.95);
+            bgPhotoEl.src = dataUrl;
+            bgPhotoEl.style.display = 'block';
+            placeholderText.style.display = 'none';
+            loading.style.display = 'none';
+            closeCameraFeed();
+            updateGuidanceBanner();
+        }
+
+        function closeCameraFeed() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            cameraInterface.style.display = 'none';
+        }
+
+        // High-Resolution Export / Download Composite PNG
+        btnDownload.addEventListener('click', async () => {
+            const layers = document.querySelectorAll('.design-layer-item');
+            const hasBg = (bgPhotoEl.style.display === 'block');
+
+            if (!hasBg && layers.length === 0) {
+                alert("Primero debes subir una fotografía o agregar al menos un diseño para guardar.");
+                return;
+            }
+
+            loading.style.display = 'flex';
+
+            const exportCanvas = document.createElement('canvas');
+            const exportCtx = exportCanvas.getContext('2d');
+
+            const canvasW = workspaceArea.clientWidth;
+            const canvasH = workspaceArea.clientHeight;
+
+            exportCanvas.width = canvasW;
+            exportCanvas.height = canvasH;
+
+            // 1. Draw Background Photo if present
+            if (hasBg && bgPhotoEl.complete) {
+                const imgAspect = bgPhotoEl.naturalHeight / bgPhotoEl.naturalWidth;
+                const canvasAspect = canvasH / canvasW;
+                let renderW = canvasW;
+                let renderH = canvasH;
+                let renderX = 0;
+                let renderY = 0;
+
+                if (imgAspect > canvasAspect) {
+                    renderH = canvasH;
+                    renderW = canvasH / imgAspect;
+                    renderX = (canvasW - renderW) / 2;
+                } else {
+                    renderW = canvasW;
+                    renderH = canvasW * imgAspect;
+                    renderY = (canvasH - renderH) / 2;
+                }
+
+                exportCtx.drawImage(bgPhotoEl, renderX, renderY, renderW, renderH);
+            } else {
+                // Dark background fill
+                exportCtx.fillStyle = '#0f172a';
+                exportCtx.fillRect(0, 0, canvasW, canvasH);
+            }
+
+            // 2. Draw Each Layer onto Export Canvas
+            for (const layer of layers) {
+                const imgEl = layer.querySelector('img');
+                if (!imgEl) continue;
+
+                const left = parseFloat(layer.style.left) || 0;
+                const top = parseFloat(layer.style.top) || 0;
+                const width = layer.offsetWidth;
+                const height = layer.offsetHeight;
+                const rotation = parseFloat(layer.dataset.rotation || 0);
+                const opacity = parseFloat(layer.style.opacity || 0.95);
+
+                const tempImg = new Image();
+                tempImg.src = imgEl.src;
+                await new Promise(r => { tempImg.onload = r; tempImg.onerror = r; });
+
+                exportCtx.save();
+                exportCtx.translate(left + width / 2, top + height / 2);
+                exportCtx.rotate(rotation * Math.PI / 180);
+                exportCtx.globalAlpha = opacity;
+                exportCtx.drawImage(tempImg, -width / 2, -height / 2, width, height);
+                exportCtx.restore();
+            }
+
+            loading.style.display = 'none';
+
+            // 3. Export PNG
+            const dataUrl = exportCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'simulacion-spesfidem.png';
+            link.href = dataUrl;
+            link.click();
+        });
+    </script>
+</body>
+
+</html>

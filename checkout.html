@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasarela de Pago Segura | Spesfidem Aluminio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=OVERHAUL_V2">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --primary: #020617;
+            --accent: #3b82f6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .checkout-box {
+            background: white;
+            padding: 3rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .security-badge {
+            color: #10b981;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .method {
+            border: 1px solid #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .method:hover {
+            border-color: var(--accent);
+            background: #f1f5f9;
+        }
+
+        .btn-pay {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .back {
+            display: block;
+            margin-top: 2rem;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="checkout-box">
+        <div class="security-badge">
+            <i class="fas fa-lock"></i> PAGO 100% SEGURO Y CIFRADO
+        </div>
+        <h2 style="font-family: 'Outfit', sans-serif; color: var(--accent);">Portal de Pagos</h2>
+        <h1 id="methodTitle">Procesando...</h1>
+
+        <div id="methodInfo"
+            style="margin: 2rem 0; padding: 2rem; background: #f1f5f9; border-radius: 1rem; text-align: left; line-height: 1.6;">
+            <!-- Content injected by JS -->
+        </div>
+
+        <button class="btn-pay" id="mainRedirectBtn" style="margin-bottom: 1.5rem;">Continuar al Pago Seguro</button>
+
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 2rem;">
+            <a href="index.html" class="btn-primary"
+                style="display:inline-flex; text-decoration:none; padding:1rem 2rem; justify-content:center; width:100%;">
+                <i class="fas fa-home" style="margin-right:8px;"></i> VOLVER AL INICIO
+            </a>
+        </div>
+
+        <p style="margin-top: 1.5rem; font-size: 0.8rem; color: #64748b;">
+            <i class="fas fa-shield-alt"></i> Sus datos financieros están protegidos por encriptación avanzada de
+            Spesfidem Aluminio.
+        </p>
+    </div>
+    <script src="js/app.js?v=RESTORED_V3"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            window.location.replace('index.html');
+        });
+    </script>
+                'transferencia': {
+                    title: 'Transferencia Bancaria Directa',
+                    html: `
+                        <div style="background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 1rem;">
+                            <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #f1f5f9;">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Davivienda_logo.svg?2016" style="height:30px; opacity:0.6;" alt="Bank Icon"> 
+                                <span style="font-weight:bold; color:#0f172a;">Banco de Bogotá</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <small style="color:#64748b; display:block;">Cuenta de Ahorros</small>
+                                    <span style="font-family:monospace; font-size:1.2rem; font-weight:bold; color:#334155;">583092325</span>
+                                </div>
+                                <button onclick="navigator.clipboard.writeText('583092325'); if(window.showToast) window.showToast('Número de cuenta copiado', 'info');" style="background:#e2e8f0; border:none; padding:0.5rem; border-radius:0.5rem; cursor:pointer;" title="Copiar"><i class="far fa-copy"></i></button>
+                            </div>
+                            <div style="margin-top:0.5rem;">
+                                <small style="color:#64748b;">Titular: <strong>Spesfidem Aluminio</strong></small>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                            <div style="background: white; padding: 1rem; border-radius: 1rem; text-align:center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                                <h4 style="margin:0 0 0.5rem 0; color:#2d0e37;">Nequi</h4>
+                                <p style="margin:0; font-weight:bold;">323 204 5129</p>
+                            </div>
+                            <div style="background: white; padding: 1rem; border-radius: 1rem; text-align:center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                                <h4 style="margin:0 0 0.5rem 0; color:#ed1c29;">DaviPlata</h4>
+                                <p style="margin:0; font-weight:bold;">323 204 5129</p>
+                            </div>
+                        </div>
+                        
+                        <p style="text-align:center; margin-top:1.5rem; font-size:0.9rem; color:#64748b;">
+                            <i class="fas fa-camera"></i> Tome una captura de su comprobante y envíela a nuestro WhatsApp para legalizar el pedido.
+                        </p>
+                    `,
+                    btnText: '<i class="fab fa-whatsapp"></i> Enviar Comprobante',
+                    link: 'https://wa.me/573232045129?text=Hola%20Spesfidem,%20adjunto%20mi%20comprobante%20de%20pago%20para%20confirmar%20mi%20pedido.'
+                },
+                'pse': {
+                    title: 'Pago por PSE',
+                    html: `
+                        <div style="text-align:center; padding:2rem;">
+                            <img src="https://www.pse.com.co/assets/images/logo-pse.png" style="height:60px; margin-bottom:1rem;" alt="PSE Logo">
+                            <p>Será redirigido al portal oficial de PSE.</p>
+                            <p>Allí podrá seleccionar su banco y realizar el débito directo de su cuenta.</p>
+                        </div>
+                    `,
+                    btnText: 'Ir al Portal PSE',
+                    link: 'https://www.pse.com.co/personas' // Real PSE Portal
+                },
+                'tarjeta': {
+                    title: 'Pago con Tarjeta de Crédito',
+                    html: `
+                        <div style="text-align:center; padding:2rem;">
+                            <div style="display:flex; justify-content:center; gap:1rem; margin-bottom:1.5rem;">
+                                <i class="fas fa-credit-card fa-3x" style="color:#0f172a;"></i>
+                            </div>
+                            <p>Para pagar con tarjeta de crédito, contacte a un asesor para generar un link de pago único y seguro (Wompi/Bold).</p>
+                        </div>
+                    `,
+                    btnText: 'Solicitar Link de Pago (WhatsApp)',
+                    link: 'https://wa.me/573232045129?text=Hola,%20deseo%20pagar%20con%20tarjeta%20de%20credito.%20%C2%BFPueden%20enviarme%20un%20link%20de%20pago?'
+                }
+            };
+
+            const selected = content[method] || content['transferencia'];
+            title.textContent = selected.title;
+            info.innerHTML = selected.html;
+            btn.innerHTML = selected.btnText; // Changed to innerHTML to support icons
+
+            btn.onclick = () => {
+                // Direct redirection, no simulation alerts
+                window.open(selected.link, '_blank');
+            };
+        });
+    </script>
+</body>
+
+</html>

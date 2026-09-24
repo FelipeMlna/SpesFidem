@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Admin Dashboard | Spesfidem</title>
+    <!-- External Styles -->
+    <link rel="stylesheet" href="css/style.css?v=V2_NAV">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Anti-Flicker & Strict Auth Guard Script -->
+    <script>
+        (function enforceAdminAuth() {
+            let isAdmin = false;
+            let isNormalUser = false;
+            try {
+                const isAdminFlag = sessionStorage.getItem('isAdmin') === 'true';
+                const crmData = JSON.parse(sessionStorage.getItem('spesfidem_crm_session') || '{}');
+                const clientUser = JSON.parse(localStorage.getItem('spesfidem_client_user') || '{}');
+
+                if (isAdminFlag || (crmData && (crmData.role === 'admin' || crmData.role === 'administrador' || crmData.id_rol === 1))) {
+                    isAdmin = true;
+                } else if ((crmData && crmData.role === 'user') || (clientUser && clientUser.role === 'user')) {
+                    isNormalUser = true;
+                }
+            } catch (e) { }
+
+            if (isAdmin) {
+                sessionStorage.setItem('isAdmin', 'true');
+                document.documentElement.classList.add('is-admin');
+            } else {
+                document.documentElement.classList.remove('is-admin');
+                try {
+                    sessionStorage.clear();
+                    localStorage.removeItem('isAdmin');
+                    localStorage.removeItem('adminName');
+                    localStorage.removeItem('spesfidem_crm_session');
+                } catch(e){}
+                if (isNormalUser) {
+                    window.location.replace('index.html');
+                } else {
+                    window.location.replace('crm-login.html?redirect=admin.html');
+                }
+            }
+        })();
+
+        // BFCache (Back-Forward Cache) Guard: Handles Browser Back Button after logout
+        window.addEventListener('pageshow', function (event) {
+            let isAdmin = false;
+            try {
+                const isAdminFlag = sessionStorage.getItem('isAdmin') === 'true';
+                const crmData = JSON.parse(sessionStorage.getItem('spesfidem_crm_session') || '{}');
+                if (isAdminFlag || (crmData && (crmData.role === 'admin' || crmData.role === 'administrador' || crmData.id_rol === 1))) isAdmin = true;
+            } catch(e){}
+
+            if (!isAdmin) {
+                document.documentElement.classList.remove('is-admin');
+                window.location.replace('crm-login.html?redirect=admin.html');
+            }
+        });
+        // Fail-safe global logout definition (available immediately on page load)
+        window.logout = function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+            try {
+                fetch('/api/logout', { method: 'POST' }).catch(() => {});
+            } catch (err) {}
+            try {
+                sessionStorage.clear();
+                localStorage.removeItem('isAdmin');
+                localStorage.removeItem('adminName');
+                localStorage.removeItem('spesfidem_crm_session');
+                localStorage.removeItem('spesfidem_client_user');
+            } catch (err) {}
+            try {
+                document.cookie = "session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie = "isAdmin=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            } catch (err) {}
+            document.documentElement.classList.remove('is-admin');
+            window.location.replace('index.html');
+        };
+        window.adminLogout = window.logout;
+        window.togglePasswordVisibility = function (inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+        };
+    </script>
+    <style>
+        /* ADMIN PASSWORD TOGGLE */
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .password-toggle-btn:hover {
+            color: #0f172a;
+        }
+
+        /* ANTI-FLICKER: Hide protected content by default */
+        .sidebar,
+        .main-content {
+            display: none !important;
+        }
+
+        /* REVEAL ONLY WHEN AUTHENTICATED */
+        html.is-admin .sidebar {
+            display: block !important;
+        }
+
+        html.is-admin .main-content {
+            display: block !important;
+        }
+
+        html.is-admin #mobile-menu-toggle {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            html.is-admin #mobile-menu-toggle {
+                display: block;
+            }
+        }
+
+        /* ANTI-FLICKER: Overlay is hidden by default inline. Show it if NOT admin */
+        html:not(.is-admin) #loginOverlay {
+            display: flex !important;
+        }
+
+        /* Admin-specific styles */
+        body {
+            background-color: #0f172a; /* Avoid white flash while login overlay loads */
+            color: #1e293b;
+            display: flex;
+            /* Override global padding from style.css */
+            padding-top: 0 !important;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        html.is-admin body {
+            background-color: #f1f5f9; /* Regular admin background */
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #0f172a;
+            height: 100vh;
+            color: white;
+            padding: 1.5rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            /* Ensure sidebar stays on top */
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .main-content {
+            margin-left: 200px;
+            padding: 1.5rem;
+            width: calc(100% - 200px);
+            box-sizing: border-box;
+            /* Ensure padding doesn't break width */
+            transition: margin-left 0.3s ease, width 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* Desktop Sidebar Toggle Tab */
+        .desktop-sidebar-toggle {
+            position: fixed;
+            top: 50%;
+            left: 200px;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 60px;
+            background: #0f172a;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            display: none; /* Revealed when auth'd */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            box-shadow: 4px 0 6px rgba(0,0,0,0.2);
+            z-index: 51;
+            transition: left 0.3s ease;
+            outline: none;
+        }
+
+        html.is-admin .desktop-sidebar-toggle {
+            display: flex;
+        }
+
+        .desktop-sidebar-toggle.collapsed {
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            html.is-admin .desktop-sidebar-toggle {
+                display: none;
+            }
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            min-width: 200px;
+            margin-bottom: 2rem;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-collapse: collapse;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .status-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Print Styles */
+        @media print {
+
+            .sidebar,
+            #themeLauncher,
+            #accessibilityPanel,
+            .header-toolbar,
+            #mobile-menu-toggle,
+            #paginationControls,
+            .admin-search-container,
+            .clientCountHeader,
+            .btn-edit,
+            .btn-delete,
+            #selectAll,
+            .client-checkbox {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+
+            body {
+                background: white !important;
+            }
+
+            table {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+
+            .print-selection-active tr:not(.is-selected):not(.table-header-row) {
+                display: none !important;
+            }
+
+            th:first-child,
+            td:first-child,
+            th:last-child,
+            td:last-child,
+            th:nth-child(5),
+            td:nth-child(5),
+            th:nth-child(7),
+            td:nth-child(7),
+            th:nth-child(8),
+            td:nth-child(8) {
+                display: none !important;
+            }
+
+            .print-only {
+                display: block !important;
+            }
+        }
+
+        /* RESPONSIVE DESIGN */
+        #mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            background: #0f172a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            #mobile-menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                width: 250px;
+                box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 1rem !important;
+                padding-top: 5rem !important;
+            }
+
+            .stat-card {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                background: white;
+                border-radius: 8px;
+                margin-bottom: 2rem;
+            }
+
+            .header-toolbar {
+                flex-direction: column;
+                gap: 1rem !important;
+            }
+
+            .header-toolbar>div {
+                width: 100% !important;
+                max-width: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Prevent theme flicker -> apply classes immediately -->
+    <script>
+        try {
+            const mode = localStorage.getItem('visualMode');
+            if (mode) {
+                if (mode === 'hc') document.body.classList.add('high-contrast');
+                else if (mode !== 'standard') document.body.classList.add('theme-' + mode);
+            }
+            const zoom = localStorage.getItem('fontZoom');
+            if (zoom) document.documentElement.style.setProperty('--font-zoom', zoom);
+        } catch(e) {}
+    </script>
+
+    <!-- Mobile Menu Toggle -->
+    <button id="mobile-menu-toggle" onclick="window.toggleSidebar()" style="display: none;">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Login Overlay (Hidden by default to prevent flicker, shown by CSS if NOT admin) -->
+    <div id="loginOverlay"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9999; display:none; justify-content:center; align-items:center;">
+        <div
+            style="background:white; padding:3rem; border-radius:15px; width:100%; max-width:450px; text-align:center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div style="margin-bottom: 2rem;">
+                <i class="fas fa-shield-alt" style="font-size: 3rem; color: #0f172a;"></i>
+            </div>
+            <h2 style="color:#0f172a; margin-bottom:1rem; font-family: 'Outfit', sans-serif;">Acceso Administrativo
+            </h2>
+            <p style="margin-bottom:2rem; color:#64748b;">Ingrese sus credenciales de propietario</p>
+            <form onsubmit="adminLogin(event)" style="display:flex; flex-direction:column; gap:1rem;">
+                <div style="position:relative;">
+                    <i class="fas fa-id-card"
+                        style="position:absolute; left:15px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
+                    <input type="text" id="adminUser" placeholder="Documento, usuario o correo" required
+                        style="width:100%; padding:12px 12px 12px 40px; border:1px solid #e2e8f0; border-radius:8px; font-size:1rem;">
+                </div>
+                <div style="position:relative;">
+                    <i class="fas fa-lock"
+                        style="position:absolute; left:15px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
+                    <input type="password" id="adminPass" placeholder="Contraseña" required
+                        style="width:100%; padding:12px 45px 12px 40px; border:1px solid #e2e8f0; border-radius:8px; font-size:1rem;">
+                    <button type="button" class="password-toggle-btn"
+                        onclick="togglePasswordVisibility('adminPass', this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="btn-primary"
+                    style="width:100%; justify-content:center; padding: 1rem; margin-top: 1rem;">
+                    INGRESAR AL SISTEMA
+                </button>
+            </form>
+            <p id="loginError" style="color:#ef4444; margin-top:1rem; display:none; font-weight:bold;"><i
+                    class="fas fa-exclamation-circle"></i> Credenciales incorrectas.</p>
+            <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; align-items: center;">
+                <div id="serverStatusBadge"
+                    style="font-size: 0.75rem; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+                    <i class="fas fa-circle" style="font-size: 0.5rem; color: #e2e8f0;"></i>
+                    <span>Verificando servidor...</span>
+                </div>
+            </div>
+            <script>
+                // Diagnostic: Check if server is running
+                async function checkServerStatus() {
+                    const badge = document.getElementById('serverStatusBadge');
+                    if (!badge) return;
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 1500);
+                        
+                        const currentPort = window.location.port;
+                        const currentHost = window.location.hostname || 'localhost';
+                        
+                        // Construct candidate targets
+                        const targets = [
+                            'http://localhost:3000/api/health',
+                            'http://127.0.0.1:3000/api/health',
+                            '/api/health'
+                        ];
+                        if (currentPort && currentPort !== '3000') {
+                            targets.unshift('http://' + currentHost + ':' + currentPort + '/api/health');
+                        }
+
+                        let success = false;
+                        let activePort = '3000';
+
+                        for (const targetUrl of targets) {
+                            try {
+                                const res = await fetch(targetUrl, { signal: controller.signal });
+                                if (res.ok) {
+                                    success = true;
+                                    activePort = targetUrl.includes(':') ? (targetUrl.split(':')[2] || '').split('/')[0] : (currentPort || '3000');
+                                    break;
+                                }
+                            } catch (e) { }
+                        }
+
+                        clearTimeout(timeoutId);
+
+                        if (success) {
+                            badge.innerHTML = '<i class="fas fa-circle" style="color: #10b981;"></i> <span style="color: #10b981; font-weight: 700;">Servidor Conectado (Puerto ' + activePort + ')</span>';
+                        } else {
+                            badge.innerHTML = '<i class="fas fa-circle" style="color: #38bdf8;"></i> <span style="color: #38bdf8; font-weight: 600;">Modo Autónomo Local (Listo para Ingresar)</span>';
+                        }
+                    } catch (e) {
+                        badge.innerHTML = '<i class="fas fa-circle" style="color: #38bdf8;"></i> <span style="color: #38bdf8; font-weight: 600;">Modo Autónomo Local (Listo para Ingresar)</span>';
+                    }
+                }
+                setTimeout(checkServerStatus, 300);
+            </script>
+        </div>
+    </div>
+
+    <button id="desktopSidebarToggle" class="desktop-sidebar-toggle" onclick="toggleDesktopSidebar()">
+        <i class="fas fa-chevron-left" id="sidebarToggleIcon"></i>
+    </button>
+
+    <div class="sidebar">
+        <h2 style="margin-bottom: 2rem; font-size: 1.2rem;">Spesfidem<span style="color:var(--accent)">.</span>
+            Admin
+        </h2>
+        <ul style="list-style: none; padding:0;">
+            <li style="margin-bottom: 1rem;"><a href="#"
+                    style="color:white; text-decoration:none; font-size: 0.9rem;"><i class="fas fa-users"
+                        style="margin-right:0.5rem;"></i> Clientes</a></li>
+
+            <li style="margin-bottom: 1rem;"><a href="cortes.html"
+                    style="color:var(--accent); text-decoration:none; font-size: 0.9rem; font-weight: bold;"><i
+                        class="fas fa-table" style="margin-right:0.5rem;"></i> TABLA</a></li>
+            <li style="margin-bottom: 1rem;"><a href="touch_mirror_calc.html"
+                    style="color:var(--accent); text-decoration:none; font-size: 0.9rem; font-weight: bold;"><i
+                        class="fas fa-magic" style="margin-right:0.5rem;"></i> ESPEJO TOUCH</a></li>
+            <li style="margin-bottom: 1rem;"><a href="production.html"
+                    style="color:var(--accent); text-decoration:none; font-size: 0.9rem; font-weight: bold;"><i
+                        class="fas fa-cogs" style="margin-right:0.5rem;"></i> PRODUCCIÓN</a></li>
+            <li style="margin-bottom: 1rem;"><a href="javascript:void(0);" onclick="window.logout(event); return false;"
+                    style="color: #ef4444; text-decoration:none; font-size: 0.9rem; font-weight: bold;"><i
+                        class="fas fa-sign-out-alt" style="margin-right:0.5rem;"></i> CERRAR SESIÓN</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="print-only"
+            style="display: none; border-bottom: 2px solid #0f172a; padding-bottom: 1rem; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 style="color: #0f172a; margin: 0; font-size: 1.5rem;">SPESFIDEM <span
+                            style="color:#3b82f6">ALUMINIO</span></h1>
+                    <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.9rem;">Reporte Consolidado de Clientes
+                        y
+                        Pedidos</p>
+                </div>
+                <div style="text-align: right; font-size: 0.8rem; color: #64748b;">
+                    <p style="margin: 0;">Fecha de Impresión: <span id="printDate"></span></p>
+                    <p style="margin: 2px 0 0 0;">Generado por: Administrador Jhon Edinson</p>
+                </div>
+            </div>
+        </div>
+
+        <header
+            style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.8rem; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); position: relative !important;">
+
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 200px;">
+                    <div>
+                        <h1 style="font-size: 1.2rem; color: #0f172a; margin: 0;">Panel de Control</h1>
+                    </div>
+                    <div
+                        style="background: #f1f5f9; padding: 0.25rem 0.75rem; border-radius: 20px; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fas fa-users" style="color: #0f172a; font-size: 0.8rem;"></i>
+                        <span style="font-weight: bold; font-size: 0.9rem; color: #0f172a;"
+                            id="clientCountHeader">0</span>
+                    </div>
+                </div>
+
+                <div class="admin-greeting-card"
+                    style="display: flex; align-items: center; gap: 0.8rem; flex: 1; justify-content: center; background: #f8fafc; padding: 0.5rem 1.5rem; border-radius: 50px; border: 1px solid #e2e8f0; min-width: 250px;">
+                    <div
+                        style="width: 32px; height: 32px; background: #0f172a; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span style="color: #334155; font-size: 0.95rem;">Hola, <strong class="name-highlight"
+                            id="adminNameDisplay">Administrador</strong></span>
+                </div>
+
+                <div style="flex: 1; min-width: 150px; display: flex; justify-content: flex-end;"></div>
+            </div>
+
+            <div class="header-toolbar"
+                style="display: flex; gap: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1.2rem; width: 100%; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+
+                <div style="position:relative; flex: 1; min-width: 300px; max-width: 500px;">
+                    <i class="fas fa-search"
+                        style="position:absolute; left:15px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.9rem;"></i>
+                    <input type="text" id="adminSearch" onkeyup="filterClients()"
+                        placeholder="Buscar por nombre, celular o ciudad..."
+                        style="width:100%; padding:0.75rem 0.75rem 0.75rem 2.8rem; border:1px solid #cbd5e1; border-radius:10px; font-size:0.9rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); transition: border-color 0.2s;">
+                </div>
+
+                <div style="display: flex; gap: 0.8rem; align-items:center; flex-wrap: wrap;">
+                    <button onclick="window.printReport()" class="btn-primary"
+                        style="background: #1e293b; border:none; border-radius: 8px; cursor: pointer; display:flex; gap:0.6rem; align-items:center; color:white; padding: 0.75rem 1.25rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <i class="fas fa-print"></i> <span class="btn-text">Imprimir</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="paginationControls"
+                style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 0.5rem; font-size: 0.8rem;">
+            </div>
+        </header>
+
+        <div class="admin-table-container"
+            style="background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow-x: auto; width: 100%; margin-top: 2rem;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 1600px;">
+                <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                    <tr class="table-header-row">
+                        <th style="padding: 1rem; width: 40px; text-align: center;">
+                            <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"
+                                style="cursor:pointer; width: 16px; height: 16px;">
+                        </th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Fecha</th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Nombre Cliente</th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Documento</th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Teléfonos</th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Ciudad</th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Producto</th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Email</th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Dirección</th>
+                        <th
+                            style="padding: 1rem; text-align: left; color: #64748b; font-weight: 600; font-size: 0.85rem;">
+                            Etapa del Proyecto</th>
+                        <th
+                            style="padding: 1rem; text-align: center; color: #0f172a; font-weight: 800; font-size: 0.9rem; background: #f1f5f9; position: sticky; right: 0; z-index: 10; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="clientTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section: Usuarios Registrados (Tabla Cuentas de Usuario) -->
+        <div id="registeredUsersSection" style="margin-top: 3rem; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 1.5rem; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <i class="fas fa-user-shield" style="font-size: 1.5rem; color: #38bdf8;"></i>
+                    <div>
+                        <h2 style="font-size: 1.3rem; color: #0f172a; margin: 0; font-weight: 800;">Usuarios Registrados</h2>
+                        <span style="font-size: 0.85rem; color: #64748b;">Cuentas creadas a través del formulario de registro público</span>
+                    </div>
+                    <span id="registeredUserCountBadge" style="background: #38bdf8; color: white; padding: 0.2rem 0.7rem; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">0</span>
+                </div>
+                <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+                    <button onclick="loadRegisteredUsersTable()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-sync-alt"></i> Actualizar Tabla
+                    </button>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto; width: 100%;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 1000px;">
+                    <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <tr>
+                            <th style="padding: 1rem; text-align: left; color: #64748b; font-weight: 700; font-size: 0.85rem;">Nombre Completo</th>
+                            <th style="padding: 1rem; text-align: left; color: #64748b; font-weight: 700; font-size: 0.85rem;">Documento / NIT</th>
+                            <th style="padding: 1rem; text-align: left; color: #64748b; font-weight: 700; font-size: 0.85rem;">Teléfono</th>
+                            <th style="padding: 1rem; text-align: left; color: #64748b; font-weight: 700; font-size: 0.85rem;">Correo Electrónico</th>
+                            <th style="padding: 1rem; text-align: left; color: #64748b; font-weight: 700; font-size: 0.85rem;">Ciudad</th>
+                            <th style="padding: 1rem; text-align: left; color: #64748b; font-weight: 700; font-size: 0.85rem;">Fecha de Registro</th>
+                            <th style="padding: 1rem; text-align: center; color: #64748b; font-weight: 700; font-size: 0.85rem;">Estado</th>
+                            <th style="padding: 1rem; text-align: center; color: #64748b; font-weight: 700; font-size: 0.85rem;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registeredUsersTableBody">
+                        <tr>
+                            <td colspan="8" style="padding: 2rem; text-align: center; color: #94a3b8;">Cargando usuarios registrados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Edit Client Modal -->
+    <div id="editOverlay"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:9000; display:none; justify-content:center; align-items:center;">
+        <div
+            style="background:white; padding:2rem; border-radius:10px; width:100%; max-width:500px; position:relative;">
+            <button onclick="closeEditModal()"
+                style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:1.5rem; cursor:pointer; color:#64748b;">&times;</button>
+            <h2 style="color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:0.5rem;">
+                Editar Cliente</h2>
+            <form onsubmit="saveEditClient(event)" style="display:flex; flex-direction:column; gap:1rem;">
+                <input type="hidden" id="editId">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div>
+                        <label style="font-weight:bold; font-size:0.9rem; color:#64748b;">Nombre Completo</label>
+                        <input type="text" id="editName"
+                            style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+                    </div>
+                    <div>
+                        <label style="font-weight:bold; font-size:0.9rem; color:#64748b;">Documento</label>
+                        <input type="text" id="editDoc"
+                            style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div>
+                        <label style="font-weight:bold; font-size:0.9rem; color:#64748b;">Celular</label>
+                        <input type="text" id="editCel"
+                            style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+                    </div>
+                    <div>
+                        <label style="font-weight:bold; font-size:0.9rem; color:#64748b;">Tel. Fijo</label>
+                        <input type="text" id="editTel"
+                            style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight:bold; font-size:0.9rem; color:#64748b;">Ciudad / Residencia</label>
+                    <input type="text" id="editCity"
+                        style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+                </div>
+                <div>
+                    <label style="font-weight:bold; font-size:0.9rem; color:#64748b;">Dirección Exacta</label>
+                    <input type="text" id="editAddress"
+                        style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+                </div>
+                <div>
+                    <label style="font-weight:bold; font-size:0.9rem; color:#64748b;">Email</label>
+                    <input type="email" id="editEmail"
+                        style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+                </div>
+                <div>
+                    <label style="font-weight:bold; font-size:0.9rem; color:#64748b;">Etapa del Proyecto</label>
+                    <select id="editDeliveryStatus"
+                        style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-weight:600;">
+                        <option value="Pendiente">Pendiente (Medición / Diseño)</option>
+                        <option value="En Fabricación">En Fabricación (Producción)</option>
+                        <option value="En Instalación">En Instalación</option>
+                        <option value="Entregado">Entregado y Finalizado</option>
+                    </select>
+                </div>
+                <div
+                    style="max-height: 300px; overflow-y: auto; padding-right: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.8rem; background: #f8fafc;">
+                    <label
+                        style="font-weight:bold; font-size:0.9rem; color:#64748b; display: block; margin-bottom: 0.5rem;">Productos
+                        y Cantidades</label>
+                    <div id="editProductSlots" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                    </div>
+                </div>
+                <div style="display:flex; gap:1rem; margin-top:1rem;">
+                    <button type="button" onclick="closeEditModal()"
+                        style="flex:1; padding:10px; border:1px solid #cbd5e1; background:white; border-radius:4px; cursor:pointer;">Cancelar</button>
+                    <button type="submit" class="btn-primary"
+                        style="flex:1; justify-content:center; padding:10px; border:none; border-radius:4px;">Guardar
+                        Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- Modal: Editar Usuario Registrado -->
+    <div id="editUserOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:9500; display:none; justify-content:center; align-items:center;">
+        <div style="background:white; padding:2rem; border-radius:12px; width:100%; max-width:500px; position:relative; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+            <button onclick="window.closeEditUserModal()" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:1.5rem; cursor:pointer; color:#64748b;">&times;</button>
+            <h2 style="color:#0f172a; margin-bottom:1.5rem; border-bottom:2px solid #e2e8f0; padding-bottom:0.5rem; font-size:1.3rem;">
+                <i class="fas fa-user-edit" style="color:#0284c7; margin-right:0.5rem;"></i> Editar Usuario Registrado
+            </h2>
+            <form onsubmit="window.saveEditUser(event)" style="display:flex; flex-direction:column; gap:1rem;">
+                <input type="hidden" id="editUserId">
+                <div id="editUserErrorBox" style="display:none; background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; padding:0.8rem 1rem; border-radius:8px; font-size:0.88rem; font-weight:600; align-items:center; gap:8px;">
+                    <i class="fas fa-exclamation-circle" style="color:#dc2626; font-size:1.1rem; flex-shrink:0;"></i> <span id="editUserErrorText"></span>
+                </div>
+                <div>
+                    <label style="font-weight:bold; font-size:0.85rem; color:#64748b; display:block; margin-bottom:0.3rem;">Nombre Completo *</label>
+                    <input type="text" id="editUserName" required style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div>
+                        <label style="font-weight:bold; font-size:0.85rem; color:#64748b; display:block; margin-bottom:0.3rem;">Documento / NIT *</label>
+                        <input type="text" id="editUserDoc" required style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-weight:bold; font-size:0.85rem; color:#64748b; display:block; margin-bottom:0.3rem;">Teléfono (10 dígs) *</label>
+                        <input type="text" id="editUserCell" required style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div>
+                        <label style="font-weight:bold; font-size:0.85rem; color:#64748b; display:block; margin-bottom:0.3rem;">Correo Electrónico *</label>
+                        <input type="email" id="editUserEmail" required style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-weight:bold; font-size:0.85rem; color:#64748b; display:block; margin-bottom:0.3rem;">Ciudad *</label>
+                        <input type="text" id="editUserCity" required style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div>
+                        <label style="font-weight:bold; font-size:0.85rem; color:#64748b; display:block; margin-bottom:0.3rem;">Estado</label>
+                        <select id="editUserStatus" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                            <option value="Activo">Activo</option>
+                            <option value="Inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:bold; font-size:0.85rem; color:#64748b; display:block; margin-bottom:0.3rem;">Rol</label>
+                        <select id="editUserRole" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                            <option value="user">Usuario Cliente</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight:bold; font-size:0.85rem; color:#64748b; display:block; margin-bottom:0.3rem;">Nueva Contraseña (dejar en blanco para no cambiar)</label>
+                    <input type="password" id="editUserPassword" placeholder="Solo si desea cambiarla" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div style="display:flex; gap:1rem; margin-top:1rem;">
+                    <button type="button" onclick="window.closeEditUserModal()" style="flex:1; padding:10px; border:1px solid #cbd5e1; background:white; border-radius:6px; cursor:pointer; font-weight:600; color:#64748b;">Cancelar</button>
+                    <button type="submit" style="flex:1; padding:10px; border:none; background:#0284c7; color:white; border-radius:6px; cursor:pointer; font-weight:700;">Actualizar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleDesktopSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const main = document.querySelector('.main-content');
+            const toggleBtn = document.getElementById('desktopSidebarToggle');
+            const icon = document.getElementById('sidebarToggleIcon');
+
+            sidebar.classList.toggle('collapsed');
+            main.classList.toggle('expanded');
+            toggleBtn.classList.toggle('collapsed');
+
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-left');
+            }
+        }
+    </script>
+    
+    <script src="js/app.js?v=V7_DEBUG"></script>
+
+    <!-- ADMIN REAL-TIME NOTIFICATIONS (SOCKET.IO) -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        (function() {
+            const BACKEND_URL = 'https://spesfidem-video-server.onrender.com';
+            console.log('[Socket.io] Conectando para notificaciones en tiempo real...');
+            
+            const socket = io(BACKEND_URL, { transports: ['websocket', 'polling'] });
+            
+            // UI Toast Container
+            const toastContainer = document.createElement('div');
+            toastContainer.id = 'consultation-toast-container';
+            toastContainer.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:10000; display:flex; flex-direction:column; gap:10px; pointer-events:none;';
+            document.body.appendChild(toastContainer);
+
+            socket.on('new-consultation', (data) => {
+                console.log('[!] Nueva consulta detectada:', data);
+                showConsultationToast(data);
+                
+                // Audio alert (optional, but requested "discreto")
+                try {
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+                    audio.volume = 0.4;
+                    audio.play();
+                } catch(e) {}
+            });
+
+            function showConsultationToast(data) {
+                const toast = document.createElement('div');
+                toast.style.cssText = 'background:#0f172a; color:white; padding:1.2rem; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.3); border-left:5px solid #00d1ff; min-width:300px; display:flex; flex-direction:column; gap:10px; pointer-events:all; animation: slideIn 0.4s ease-out;';
+                
+                const roomUrl = `${window.location.origin}/consultoria/?room=${data.roomId}&role=admin`;
+                
+                toast.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold; color:#00d1ff; font-size:0.9rem;"><i class="fas fa-video"></i> NUEVA VIDEO-CONSULTA</span>
+                        <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.2rem;">&times;</button>
+                    </div>
+                    <div style="font-size:0.85rem; color:#e2e8f0;">Un cliente ha iniciado una sesión en la sala <strong>${data.roomId}</strong>.</div>
+                    <a href="${roomUrl}" target="_blank" style="background:#00d1ff; color:#0f172a; text-decoration:none; text-align:center; padding:0.6rem; border-radius:8px; font-weight:bold; font-size:0.85rem; transition:opacity 0.2s;">UNIRSE AHORA</a>
+                `;
+
+                toastContainer.appendChild(toast);
+                
+                // Auto-remove after 30 seconds
+                setTimeout(() => { if(toast.parentElement) toast.remove(); }, 30000);
+            }
+
+            // CSS Animation
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        })();
+    </script>
+</body>
+
+</html>
